@@ -1,17 +1,54 @@
-# mess_manager
+# mess_manager (MessBook)
 
-A new Flutter project.
+The Flutter app behind **MessBook** — see the [repo root README](../README.md)
+for a feature overview. This package still uses its original `mess_manager`
+name/folders/DB file internally; only the app's branding (launcher label,
+in-app title, Android `applicationId`) changed to "MessBook".
 
-## Getting Started
+- **Platform**: Android-first, offline-first (no login required for local
+  use). Flutter 3.41+ stable.
+- **Architecture**: layered/clean — `lib/core` (theme, l10n, shared utils),
+  `lib/data` (Drift/SQLite DB, repositories, services), `lib/domain`
+  (pure business logic: split/balance/meal-rate/proration engines, models),
+  `lib/ui` (Riverpod providers, go_router, screens, widgets).
+- **State management**: `flutter_riverpod`. **DB**: `drift` (SQLite).
+  **Routing**: `go_router`. **Localization**: `flutter_localizations` + ARB
+  (English + Bangla, full parity enforced).
 
-This project is a starting point for a Flutter application.
+## Running locally
 
-A few resources to get you started if this is your first Flutter project:
+```sh
+flutter pub get
+flutter run
+```
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+Online sync/chat features (optional — the app is fully usable without them)
+need the companion server running and `apiBaseUrl` pointed at it from the
+Account screen; see the server's own README for setup.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Verifying changes
+
+```sh
+flutter analyze   # must stay clean
+flutter test      # unit + widget tests
+```
+
+## Project layout
+
+```
+lib/
+  core/       theme, localization (ARB), shared formatting/lookup utils
+  data/
+    db/           Drift schema + generated code
+    repositories/ one per domain table, wraps Drift queries as streams/futures
+    services/     cross-cutting: sync, auth, backup, notifications, chat, realtime, billing
+  domain/
+    engines/    pure-Dart business logic (splits, balances, meal rate, proration, debt simplification)
+    models/     domain value types
+  ui/
+    providers/  Riverpod wiring (repository providers, app-level state)
+    router/     go_router route table
+    screens/    one folder per feature area
+    widgets/    shared, reusable widgets
+test/           mirrors lib/ for unit + widget tests
+```

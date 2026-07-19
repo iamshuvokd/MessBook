@@ -1,0 +1,27 @@
+# Runs on every push/PR touching the app: `flutter analyze` must stay clean
+# and `flutter test` must pass, mirroring the bar this project has held
+# manually throughout development (see docs/MESS_MANAGER_PLAN.md).
+name: Flutter CI
+
+on:
+  push:
+    branches: [main]
+    paths: ['mess_manager/**']
+  pull_request:
+    paths: ['mess_manager/**']
+
+jobs:
+  analyze-and-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mess_manager
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.41.9'
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
