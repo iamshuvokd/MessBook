@@ -57,6 +57,8 @@
   "onboardRoleAdminSub": "মেস সেট আপ করুন, সদস্য যোগ করুন এবং হিসাব শুরু করুন",
   "onboardRoleMemberTitle": "আমি মেসে যোগ দিচ্ছি",
   "onboardRoleMemberSub": "সাইন ইন করুন এবং ম্যানেজারের দেওয়া ইনভাইট কোড লিখুন",
+  "onboardRestoreLink": "আগে থেকেই একটি মেস আছে? এটি ফিরিয়ে আনতে সাইন ইন করুন",
+  "onboardRestoreNoMessFound": "এই গুগল অ্যাকাউন্টের জন্য এখনও কোনো মেস পাওয়া যায়নি।",
   "drawerSectionDaily": "দৈনন্দিন",
   "drawerSectionMoney": "টাকা-পয়সা",
   "drawerSectionPeople": "সদস্যরা",

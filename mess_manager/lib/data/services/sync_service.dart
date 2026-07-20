@@ -40,6 +40,34 @@ class SyncService {
 
   Future<InviteCodeLookup> lookupInviteCode(String code) => _api.lookupInviteCode(code);
 
+  /// Pulls down every online mess this signed-in account owns or has
+  /// already joined that isn't yet known on this device — restores a
+  /// returning App Admin's/member's messes after a fresh install or new
+  /// device instead of making them create a mess from scratch. Safe to call
+  /// on every sign-in: a no-op for messes already present locally. Returns
+  /// how many messes were newly restored, so a caller can decide what to
+  /// show the user.
+  Future<int> restoreOnlineGroups() async {
+    final remote = await _api.listMyOnlineGroups();
+    var restored = 0;
+    for (final g in remote) {
+      final existing = await _groupsRepo.getGroup(g.id);
+      if (existing != null) continue;
+      try {
+        await pullGroup(g.id);
+        // The generic sync payload never carries inviteCode (server-managed,
+        // client-local-only — see SyncApiService._applyPulled) so a
+        // freshly-restored mess needs it set explicitly, otherwise it would
+        // locally look offline despite being the account's own online mess.
+        if (g.inviteCode != null) await _groupsRepo.setInviteCode(g.id, g.inviteCode!);
+        restored++;
+      } catch (_) {
+        // Best-effort per mess; one failure shouldn't block restoring the rest.
+      }
+    }
+    return restored;
+  }
+
   Future<JoinResult> joinGroup({required String code, String? memberName, String? existingMemberId}) async {
     final result = await _api.joinGroup(code: code, memberName: memberName, existingMemberId: existingMemberId);
     await _markSynced(result.groupId, result.serverTimeMs - _cursorSafetyMs);

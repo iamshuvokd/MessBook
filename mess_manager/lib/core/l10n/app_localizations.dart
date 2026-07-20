@@ -398,6 +398,18 @@ abstract class AppLocalizations {
   /// **'Sign in and enter the invite code your manager shared'**
   String get onboardRoleMemberSub;
 
+  /// No description provided for @onboardRestoreLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Already have a mess? Sign in to restore it'**
+  String get onboardRestoreLink;
+
+  /// No description provided for @onboardRestoreNoMessFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No mess found for this Google account yet.'**
+  String get onboardRestoreNoMessFound;
+
   /// No description provided for @drawerSectionDaily.
   ///
   /// In en, this message translates to:

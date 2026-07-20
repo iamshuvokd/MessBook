@@ -164,6 +164,14 @@ class AppLocalizationsBn extends AppLocalizations {
       'সাইন ইন করুন এবং ম্যানেজারের দেওয়া ইনভাইট কোড লিখুন';
 
   @override
+  String get onboardRestoreLink =>
+      'আগে থেকেই একটি মেস আছে? এটি ফিরিয়ে আনতে সাইন ইন করুন';
+
+  @override
+  String get onboardRestoreNoMessFound =>
+      'এই গুগল অ্যাকাউন্টের জন্য এখনও কোনো মেস পাওয়া যায়নি।';
+
+  @override
   String get drawerSectionDaily => 'দৈনন্দিন';
 
   @override

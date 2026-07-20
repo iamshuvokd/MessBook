@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/app_providers.dart';
+import '../../providers/repository_providers.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -229,7 +230,51 @@ class _RolePage extends StatelessWidget {
             subtitle: l10n.onboardRoleMemberSub,
             onTap: () => context.push('/join'),
           ),
+          const SizedBox(height: 8),
+          const _RestoreAccountLink(),
         ],
+      ),
+    );
+  }
+}
+
+/// For a returning App Admin/member on a fresh install or new device: sign
+/// in and immediately restore whichever online messes this Google account
+/// already owns or has joined, instead of forcing them through "create a
+/// new mess". [AuthController.signIn] does the actual restore; this just
+/// drives it and reacts to the outcome.
+class _RestoreAccountLink extends ConsumerWidget {
+  const _RestoreAccountLink();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context);
+    final authState = ref.watch(authControllerProvider);
+
+    Future<void> restore() async {
+      await ref.read(authControllerProvider.notifier).signIn();
+      if (!context.mounted) return;
+      final result = ref.read(authControllerProvider);
+      if (result.hasError) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(l10n.commonErrorPrefix(result.error.toString()))));
+        return;
+      }
+      final groups = await ref.read(groupsRepositoryProvider).watchActiveGroups().first;
+      if (!context.mounted) return;
+      if (groups.isNotEmpty) {
+        context.go('/groups');
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.onboardRestoreNoMessFound)));
+      }
+    }
+
+    return Center(
+      child: TextButton(
+        onPressed: authState.isLoading ? null : restore,
+        child: authState.isLoading
+            ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+            : Text(l10n.onboardRestoreLink),
       ),
     );
   }

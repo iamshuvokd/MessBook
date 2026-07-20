@@ -21,7 +21,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   }
 
   Future<void> _decide() async {
-    final groups = await ref.read(groupsRepositoryProvider).watchActiveGroups().first;
+    var groups = await ref.read(groupsRepositoryProvider).watchActiveGroups().first;
+    // A fresh install with no local messes but an already-signed-in Google
+    // session (persisted across reinstall on some devices, or a data-clear
+    // that didn't touch the OS-level Google session) — restore this
+    // account's existing online messes before assuming there's really
+    // nothing and sending the user through "create a new mess" onboarding.
+    if (groups.isEmpty && await ref.read(authServiceProvider).isSignedIn) {
+      await ref.read(syncServiceProvider).restoreOnlineGroups().catchError((_) => 0);
+      groups = await ref.read(groupsRepositoryProvider).watchActiveGroups().first;
+    }
     if (!mounted) return;
     context.go(groups.isEmpty ? '/onboarding' : '/groups');
   }

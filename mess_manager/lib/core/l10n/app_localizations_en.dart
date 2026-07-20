@@ -164,6 +164,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign in and enter the invite code your manager shared';
 
   @override
+  String get onboardRestoreLink => 'Already have a mess? Sign in to restore it';
+
+  @override
+  String get onboardRestoreNoMessFound =>
+      'No mess found for this Google account yet.';
+
+  @override
   String get drawerSectionDaily => 'Daily';
 
   @override

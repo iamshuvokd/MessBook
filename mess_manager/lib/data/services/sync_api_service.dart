@@ -114,6 +114,15 @@ class SyncApiService {
     await _api.post('/groups/$groupId/transfer-ownership', {'newOwnerMemberId': newOwnerMemberId});
   }
 
+  /// Every online mess this signed-in account owns or has already joined —
+  /// the source of truth for restoring a returning user's messes on a new
+  /// device/reinstall instead of making them create one from scratch.
+  Future<List<({String id, String? inviteCode})>> listMyOnlineGroups() async {
+    final response = await _api.get('/groups');
+    final rows = (response['groups'] as List).cast<Map<String, dynamic>>();
+    return [for (final r in rows) (id: r['id'] as String, inviteCode: r['invite_code'] as String?)];
+  }
+
   Future<void> pushAll(String groupId) async {
     final changes = await _collectChanges(groupId);
     await _api.post('/groups/$groupId/sync/push', {'changes': changes});

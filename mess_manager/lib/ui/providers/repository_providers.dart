@@ -748,6 +748,11 @@ class AuthController extends AsyncNotifier<AuthUser?> {
     // too instead of waiting for the next app restart.
     if (state.value != null) {
       unawaited(ref.read(pushServiceProvider).initialize());
+      // Restore any messes this account already owns/joined online so a
+      // returning user lands on their existing data instead of being sent
+      // through "create a new mess" — awaited so callers checking the
+      // local group list right after sign-in already see it populated.
+      await ref.read(syncServiceProvider).restoreOnlineGroups().catchError((_) => 0);
     }
   }
 

@@ -58,6 +58,8 @@
   "onboardRoleAdminSub": "Set up your mess, add members and start tracking",
   "onboardRoleMemberTitle": "I'm joining a mess",
   "onboardRoleMemberSub": "Sign in and enter the invite code your manager shared",
+  "onboardRestoreLink": "Already have a mess? Sign in to restore it",
+  "onboardRestoreNoMessFound": "No mess found for this Google account yet.",
   "drawerSectionDaily": "Daily",
   "drawerSectionMoney": "Money",
   "drawerSectionPeople": "People",
