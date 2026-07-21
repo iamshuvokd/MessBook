@@ -45,6 +45,23 @@ void main() {
     expect(bn.digits('3'), mealSheetCellLabel(bn, 2, 1));
   });
 
+  group('canEditMemberMealCell (role-based meal editing)', () {
+    test('a meal manager can edit any row', () {
+      expect(canEditMemberMealCell(hasMealsManage: true, isOwnRow: false, monthClosed: false), isTrue);
+      expect(canEditMemberMealCell(hasMealsManage: true, isOwnRow: true, monthClosed: false), isTrue);
+    });
+
+    test('a plain member can edit only their own row', () {
+      expect(canEditMemberMealCell(hasMealsManage: false, isOwnRow: true, monthClosed: false), isTrue);
+      expect(canEditMemberMealCell(hasMealsManage: false, isOwnRow: false, monthClosed: false), isFalse);
+    });
+
+    test('a closed month is locked for everyone, even a manager or own row', () {
+      expect(canEditMemberMealCell(hasMealsManage: true, isOwnRow: true, monthClosed: true), isFalse);
+      expect(canEditMemberMealCell(hasMealsManage: false, isOwnRow: true, monthClosed: true), isFalse);
+    });
+  });
+
   group('mealDaySummary (today total for the manager)', () {
     test('sums own + guest meals across members and counts the eaters', () {
       final s = mealDaySummary([

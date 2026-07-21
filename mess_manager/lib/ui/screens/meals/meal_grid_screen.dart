@@ -27,6 +27,15 @@ String mealSheetCellLabel(BdFormatter fmt, double count, double guest) {
   return fmt.digits(total.toStringAsFixed(total % 1 == 0 ? 0 : 1));
 }
 
+/// Whether the current user may edit the meal cell belonging to a given
+/// member. A meal manager (`mealsManage`) can edit everyone's; a plain
+/// member can edit only their own row. Nobody can edit a closed month.
+/// Pure + testable so this role rule can't silently regress.
+bool canEditMemberMealCell({required bool hasMealsManage, required bool isOwnRow, required bool monthClosed}) {
+  if (monthClosed) return false;
+  return hasMealsManage || isOwnRow;
+}
+
 /// A day's meal summary for the manager: the combined total meals (own +
 /// guest across all members), the guest portion, and how many members ate.
 /// Pure + testable so the manager's "today's total" can't quietly drift.
@@ -75,7 +84,11 @@ class MealGridScreen extends ConsumerWidget {
         ? ref.watch(isSelectedMonthClosedByLedgerProvider(LedgerPurpose.meal))
         : ref.watch(isSelectedMonthClosedProvider);
     // A closed month is locked for editing — meals can still be viewed.
-    final canManage = ref.watch(canProvider(MemberPermission.mealsManage)) && !monthClosed;
+    final hasMealsManage = ref.watch(canProvider(MemberPermission.mealsManage));
+    final canManage = hasMealsManage && !monthClosed;
+    // Which member this device is acting as — a plain member may still edit
+    // their OWN row even without mealsManage.
+    final ownMemberId = ref.watch(actingAsMemberProvider)?.id;
 
     final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
     final days = List.generate(daysInMonth, (i) => DateTime(month.year, month.month, i + 1));
@@ -249,7 +262,9 @@ class MealGridScreen extends ConsumerWidget {
                                             height: _rowHeight,
                                             data: mealByMemberDay['${m.id}|${d.day}'],
                                             fmt: fmt,
-                                            onTap: canManage
+                                            // A manager edits any row; a plain member edits only their own.
+                                            onTap: canEditMemberMealCell(
+                                                    hasMealsManage: hasMealsManage, isOwnRow: m.id == ownMemberId, monthClosed: monthClosed)
                                                 ? () => _showEditSheet(context, ref, m, d, mealByMemberDay['${m.id}|${d.day}'])
                                                 : null,
                                           ),
