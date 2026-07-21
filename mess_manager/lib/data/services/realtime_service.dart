@@ -41,24 +41,25 @@ class RealtimeService {
       _dataChanged.add(tables);
     });
 
-    final connected = Completer<void>();
+    // (Re)join the group room on EVERY connect, not just the first. socket.io
+    // auto-reconnects after a network drop with a brand-new server-side
+    // socket that belongs to no rooms — so without re-joining here,
+    // `dataChanged` silently stops arriving after the first blip and live
+    // updates appear to "work once, then die". Emitting from inside
+    // onConnect makes every (re)connect re-join. The join is
+    // membership-checked server-side; on the rare `not_a_member` ack there's
+    // nothing to do but leave the 15s foreground poll to cover this group.
     socket.onConnect((_) {
-      if (!connected.isCompleted) connected.complete();
+      socket.emitWithAck('joinGroup', groupId, ack: (_) {});
     });
-    socket.onConnectError((err) {
-      if (!connected.isCompleted) connected.completeError(err);
-    });
-    socket.connect();
-    try {
-      await connected.future.timeout(const Duration(seconds: 10));
-    } catch (_) {
-      // Best-effort: the 15s foreground poll timer still covers this group
-      // if the live socket never connects (offline, server unreachable).
-      disconnect();
-      return;
-    }
 
-    await socket.emitWithAckAsync('joinGroup', groupId);
+    // Fire-and-forget: deliberately NOT awaited. If the first connect is
+    // slow or the server is briefly unreachable, socket.io keeps retrying in
+    // the background (and re-joins via onConnect above once it lands) while
+    // the 15s foreground poll timer covers the gap — far more robust than
+    // the previous "give up after a 10s timeout" behavior, which left a
+    // screen with no live updates at all until it was re-entered.
+    socket.connect();
   }
 
   void disconnect() {
