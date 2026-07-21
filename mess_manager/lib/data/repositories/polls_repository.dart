@@ -137,6 +137,18 @@ class PollsRepository {
     );
   }
 
+  /// Permanently deletes a poll and its votes locally. Meals already written
+  /// from a previous close are separate rows and stay untouched. For an
+  /// online mess the caller also invokes
+  /// [SyncApiService.deletePollRemote] so the server drops it too (a hard
+  /// local delete alone would reappear on the next pull).
+  Future<void> deletePoll(String pollId) async {
+    await _db.transaction(() async {
+      await (_db.delete(_db.mealPollVotes)..where((v) => v.pollId.equals(pollId))).go();
+      await (_db.delete(_db.mealPolls)..where((p) => p.id.equals(pollId))).go();
+    });
+  }
+
   Future<void> castVote({required String pollId, required String memberId, required domain.PollVote value}) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.into(_db.mealPollVotes).insertOnConflictUpdate(

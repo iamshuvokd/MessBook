@@ -131,6 +131,26 @@ void main() {
     expect((await polls.watchPoll(pollId).first)!.closed, isTrue);
   });
 
+  test('deletePoll removes the poll and its votes, leaving meals intact', () async {
+    final member = await members.addMember(groupId: groupId, name: 'Alice');
+    final pollId = await polls.createPoll(
+      groupId: groupId,
+      date: today,
+      type: PollType.count,
+      closeAt: today.add(const Duration(hours: 1)),
+      createdByMemberId: creatorId,
+    );
+    await polls.castVote(pollId: pollId, memberId: member.id, value: PollVote(pollId: pollId, memberId: member.id, count: 2, votedAt: today));
+    // A meal recorded independently must survive the poll deletion.
+    await meals.setMeal(groupId: groupId, memberId: member.id, date: today, count: 3, guestCount: 0);
+
+    await polls.deletePoll(pollId);
+
+    expect(await polls.watchPoll(pollId).first, isNull);
+    expect(await polls.watchVotes(pollId).first, isEmpty);
+    expect((await meals.getMealRow(groupId, member.id, today))!.count, 3);
+  });
+
   test('a menu-type poll never touches the meal grid', () async {
     final member = await members.addMember(groupId: groupId, name: 'Alice');
     final pollId = await createPastPoll(type: PollType.menu, nonVoterPolicy: NonVoterPolicy.zero);

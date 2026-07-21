@@ -77,6 +77,26 @@ class PollDetailScreen extends ConsumerWidget {
               tooltip: l10n.pollReopen,
               onPressed: () => _reopenPoll(context, ref, pollForAppBar),
             ),
+          // Delete — a pollsManage action, available for any poll (open or
+          // closed). In its own overflow menu so it's a deliberate choice.
+          if (canManage && pollForAppBar != null)
+            PopupMenuButton<String>(
+              onSelected: (v) {
+                if (v == 'delete') _deletePoll(context, ref);
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.delete_outline_rounded, size: 20),
+                      const SizedBox(width: 10),
+                      Text(l10n.pollDelete),
+                    ],
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
       body: SyncRefreshIndicator(
@@ -169,6 +189,42 @@ class PollDetailScreen extends ConsumerWidget {
         PollType.count => l10n.pollVoteCountQuestion,
         PollType.menu => l10n.pollVoteMenuQuestion,
       };
+
+  /// Deletes the poll (pollsManage only). Local delete first, then the
+  /// server delete for an online mess so it doesn't reappear on the next
+  /// pull — same order the members screen uses. Pops back to the list after.
+  Future<void> _deletePoll(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+        title: Text(l10n.pollDelete),
+        content: Text(l10n.pollDeleteConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.commonCancel)),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(dialogContext).colorScheme.error),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(l10n.commonDelete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+
+    await ref.read(pollsRepositoryProvider).deletePoll(pollId);
+
+    final group = ref.read(selectedGroupProvider);
+    if (group?.isOnline ?? false) {
+      try {
+        await ref.read(syncApiServiceProvider).deletePollRemote(groupId, pollId);
+      } catch (_) {
+        // Local delete already succeeded; a later sync retries the server side.
+      }
+    }
+    if (context.mounted) context.pop();
+  }
 
   /// Lets a mess admin pick a new close time and reopen a closed poll, so
   /// members get more time to vote. The new close time is on today's date

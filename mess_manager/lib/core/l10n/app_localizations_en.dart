@@ -1520,6 +1520,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pollReopenAction => 'Reopen & extend';
 
   @override
+  String get pollDelete => 'Delete poll';
+
+  @override
+  String get pollDeleteConfirm =>
+      'Delete this poll and all its votes? This can\'t be undone. Meals already recorded from it stay in the sheet.';
+
+  @override
   String pollVotedCount(String voted, String total) {
     return '$voted/$total voted';
   }

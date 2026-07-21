@@ -1512,6 +1512,13 @@ class AppLocalizationsBn extends AppLocalizations {
   String get pollReopenAction => 'আবার চালু ও বাড়ান';
 
   @override
+  String get pollDelete => 'পোল মুছুন';
+
+  @override
+  String get pollDeleteConfirm =>
+      'এই পোল ও এর সব ভোট মুছে ফেলবেন? এটি আর ফেরানো যাবে না। এখান থেকে যোগ হওয়া মিল শিটে থেকে যাবে।';
+
+  @override
   String pollVotedCount(String voted, String total) {
     return '$voted/$total জন ভোট দিয়েছেন';
   }

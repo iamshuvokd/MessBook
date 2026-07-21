@@ -539,6 +539,8 @@
   "pollReopen": "Reopen voting",
   "pollReopenHint": "Give members more time to vote. The poll reopens and closes again at the new time, re-applying results (manual meal edits are kept).",
   "pollReopenAction": "Reopen & extend",
+  "pollDelete": "Delete poll",
+  "pollDeleteConfirm": "Delete this poll and all its votes? This can't be undone. Meals already recorded from it stay in the sheet.",
   "pollVotedCount": "{voted}/{total} voted",
   "@pollVotedCount": {"placeholders": {"voted": {"type": "String"}, "total": {"type": "String"}}},
   "pollResultsTitle": "Results",

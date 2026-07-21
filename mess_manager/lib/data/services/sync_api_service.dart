@@ -106,6 +106,13 @@ class SyncApiService {
     await _api.delete('/groups/$groupId/members/$memberId');
   }
 
+  /// Tells the server to drop a poll (and its votes, which cascade) that was
+  /// just deleted locally — without this the poll would silently reappear on
+  /// the next pull, since sync only ever upserts by `updated_at`.
+  Future<void> deletePollRemote(String groupId, String pollId) async {
+    await _api.delete('/groups/$groupId/polls/$pollId');
+  }
+
   /// Hands the App Admin role (and server-side mess ownership) to another
   /// already-joined member. The server does the role swap + `owner_user_id`
   /// move in one call; the caller must still be the App Admin server-side at

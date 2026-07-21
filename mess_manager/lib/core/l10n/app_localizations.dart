@@ -2846,6 +2846,18 @@ abstract class AppLocalizations {
   /// **'Reopen & extend'**
   String get pollReopenAction;
 
+  /// No description provided for @pollDelete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete poll'**
+  String get pollDelete;
+
+  /// No description provided for @pollDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this poll and all its votes? This can\'t be undone. Meals already recorded from it stay in the sheet.'**
+  String get pollDeleteConfirm;
+
   /// No description provided for @pollVotedCount.
   ///
   /// In en, this message translates to:
