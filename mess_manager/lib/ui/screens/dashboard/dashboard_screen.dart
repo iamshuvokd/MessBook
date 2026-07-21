@@ -7,6 +7,7 @@ import '../../../core/l10n/category_l10n.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/bd_formatter.dart';
 import '../../../core/utils/icon_lookup.dart';
+import '../../../domain/engines/balance_engine.dart';
 import '../../../domain/models/ledger_purpose.dart';
 import '../../../domain/models/member.dart';
 import '../../providers/app_providers.dart';
@@ -255,6 +256,14 @@ class DashboardScreen extends ConsumerWidget {
                             value: fmt.currency(
                               (balances.value ?? const []).where((b) => b.memberId == actingAs.id).firstOrNull?.net ?? 0,
                             ),
+                            // Flag it red when they're under the mess's
+                            // low-balance threshold, so "top up" is visible on
+                            // opening the app rather than only in a notification.
+                            warn: isLowBalance(
+                              remainingPaisa:
+                                  (balances.value ?? const []).where((b) => b.memberId == actingAs.id).firstOrNull?.net ?? 0,
+                              thresholdPaisa: ref.watch(selectedGroupProvider)?.lowBalanceThresholdPaisa ?? 0,
+                            ),
                             highlight: true,
                           ),
                         ],
@@ -416,11 +425,15 @@ class _TodaysPollCard extends ConsumerWidget {
 }
 
 class _MiniStat extends StatelessWidget {
-  const _MiniStat({required this.label, required this.value, this.highlight = false});
+  const _MiniStat({required this.label, required this.value, this.highlight = false, this.warn = false});
 
   final String label;
   final String value;
   final bool highlight;
+
+  /// Low balance — renders in the error colour so it reads as "top up",
+  /// not just another stat.
+  final bool warn;
 
   @override
   Widget build(BuildContext context) {
@@ -429,7 +442,11 @@ class _MiniStat extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: highlight ? scheme.primaryContainer.withValues(alpha: 0.4) : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
+          color: warn
+              ? scheme.errorContainer.withValues(alpha: 0.55)
+              : highlight
+                  ? scheme.primaryContainer.withValues(alpha: 0.4)
+                  : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(AppRadius.md),
         ),
         child: Column(
