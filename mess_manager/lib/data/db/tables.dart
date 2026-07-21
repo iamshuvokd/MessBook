@@ -23,6 +23,12 @@ class Groups extends Table {
   // "vote now" reminder. Mess-wide (set by the App Admin) and synced, so all
   // members share one policy rather than each phone guessing; 0 = off.
   IntColumn get pollReminderMinutes => integer().withDefault(const Constant(30))();
+  // Warn when a member's remaining balance falls below this (paisa).
+  // 0 = the mess hasn't set a threshold, so no low-balance warnings.
+  IntColumn get lowBalanceThresholdPaisa => integer().withDefault(const Constant(0))();
+  // When on, a member under the threshold stops getting meals added
+  // automatically (routine auto-fill / poll defaults) until they top up.
+  BoolColumn get autoMealOffBelowThreshold => boolean().withDefault(const Constant(false))();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();

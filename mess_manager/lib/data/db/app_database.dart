@@ -56,7 +56,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase([QueryExecutor? executor]) : super(executor ?? _openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -114,6 +114,13 @@ class AppDatabase extends _$AppDatabase {
             // Mess-wide poll reminder lead time: additive, existing messes
             // default to the previous hardcoded 30 minutes.
             await m.addColumn(groups, groups.pollReminderMinutes);
+          }
+          if (from < 8) {
+            // Low-balance warning threshold + optional auto meal-off:
+            // additive, and both default to "off" so nothing changes for
+            // an existing mess until the manager opts in.
+            await m.addColumn(groups, groups.lowBalanceThresholdPaisa);
+            await m.addColumn(groups, groups.autoMealOffBelowThreshold);
           }
         },
       );

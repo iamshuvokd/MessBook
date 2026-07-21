@@ -1328,6 +1328,44 @@ class AppLocalizationsBn extends AppLocalizations {
       'মিলের খরচের নিজস্ব ব্যালেন্স, হিসাব মেলানো ও মাস বন্ধ থাকবে — ভাড়া ও অন্যান্য খরচ থেকে সম্পূর্ণ আলাদা';
 
   @override
+  String get groupLowBalanceThreshold => 'কম ব্যালেন্স সতর্কতা';
+
+  @override
+  String get groupLowBalanceThresholdSub =>
+      'কোনো সদস্যের অবশিষ্ট ব্যালেন্স এই পরিমাণের নিচে নামলে সতর্ক করা হবে (০ = বন্ধ)';
+
+  @override
+  String get groupAutoMealOff => 'ব্যালেন্স কম হলে মিল বন্ধ';
+
+  @override
+  String get groupAutoMealOffSub =>
+      'সতর্কতার পরিমাণের নিচে থাকা সদস্যদের টাকা জমা না দেওয়া পর্যন্ত স্বয়ংক্রিয়ভাবে মিল যোগ হবে না';
+
+  @override
+  String get mealBalanceDeposited => 'জমা';
+
+  @override
+  String get mealBalanceSpent => 'মিল খরচ';
+
+  @override
+  String get mealBalanceRemaining => 'অবশিষ্ট';
+
+  @override
+  String get mealBalanceLow => 'ব্যালেন্স কম';
+
+  @override
+  String get notifyLowBalanceTitle => 'মেসের ব্যালেন্স কম';
+
+  @override
+  String get notifyLowBalanceOwnBody =>
+      'আপনার ব্যালেন্স কমে যাচ্ছে — অনুগ্রহ করে টাকা জমা দিন।';
+
+  @override
+  String notifyLowBalanceAdminBody(String name) {
+    return '$name-এর ব্যালেন্স সতর্কতার পরিমাণের নিচে নেমেছে।';
+  }
+
+  @override
   String get groupPollReminder => 'পোল রিমাইন্ডার';
 
   @override

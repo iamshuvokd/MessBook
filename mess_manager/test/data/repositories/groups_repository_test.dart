@@ -57,6 +57,46 @@ void main() {
     expect((await groups.getGroup('g-remote'))!.pollReminderMinutes, 20);
   });
 
+  test('low-balance threshold and auto meal-off default to off for a new mess', () async {
+    final group = await groups.createGroup(name: 'Test Mess', type: GroupType.mess);
+    expect(group.lowBalanceThresholdPaisa, 0, reason: '0 means no threshold set');
+    expect(group.autoMealOffBelowThreshold, isFalse);
+  });
+
+  test('the manager can set a low-balance threshold and the auto meal-off toggle', () async {
+    final created = await groups.createGroup(name: 'Test Mess', type: GroupType.mess);
+
+    await groups.updateGroup(created.copyWith(
+      lowBalanceThresholdPaisa: 20000, // ৳200
+      autoMealOffBelowThreshold: true,
+    ));
+
+    final after = (await groups.getGroup(created.id))!;
+    expect(after.lowBalanceThresholdPaisa, 20000);
+    expect(after.autoMealOffBelowThreshold, isTrue);
+  });
+
+  test('threshold settings survive a remote upsert, so every member device agrees', () async {
+    final now = DateTime.now();
+    await groups.upsertFromRemote(Group(
+      id: 'g-threshold',
+      name: 'Synced Mess',
+      type: GroupType.mess,
+      currencySymbol: '৳',
+      monthStartDay: 1,
+      mealEnabled: true,
+      lowBalanceThresholdPaisa: 15000,
+      autoMealOffBelowThreshold: true,
+      archived: false,
+      createdAt: now,
+      updatedAt: now,
+    ));
+
+    final g = (await groups.getGroup('g-threshold'))!;
+    expect(g.lowBalanceThresholdPaisa, 15000);
+    expect(g.autoMealOffBelowThreshold, isTrue);
+  });
+
   test('renaming a mess keeps its reminder setting intact', () async {
     final created = await groups.createGroup(name: 'Old Name', type: GroupType.mess);
     await groups.updateGroup(created.copyWith(pollReminderMinutes: 45));

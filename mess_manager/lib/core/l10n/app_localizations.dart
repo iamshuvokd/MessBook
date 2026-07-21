@@ -2492,6 +2492,72 @@ abstract class AppLocalizations {
   /// **'Meal costs get their own balance, settle-up and month close — kept apart from rent & other shared costs'**
   String get groupMealLedgerSeparateSub;
 
+  /// No description provided for @groupLowBalanceThreshold.
+  ///
+  /// In en, this message translates to:
+  /// **'Low balance warning'**
+  String get groupLowBalanceThreshold;
+
+  /// No description provided for @groupLowBalanceThresholdSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn when a member\'s remaining balance falls below this amount (0 = off)'**
+  String get groupLowBalanceThresholdSub;
+
+  /// No description provided for @groupAutoMealOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Stop meals when balance is low'**
+  String get groupAutoMealOff;
+
+  /// No description provided for @groupAutoMealOffSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Members below the warning amount stop getting meals added automatically until they top up'**
+  String get groupAutoMealOffSub;
+
+  /// No description provided for @mealBalanceDeposited.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposited'**
+  String get mealBalanceDeposited;
+
+  /// No description provided for @mealBalanceSpent.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal cost'**
+  String get mealBalanceSpent;
+
+  /// No description provided for @mealBalanceRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'Remaining'**
+  String get mealBalanceRemaining;
+
+  /// No description provided for @mealBalanceLow.
+  ///
+  /// In en, this message translates to:
+  /// **'Low balance'**
+  String get mealBalanceLow;
+
+  /// No description provided for @notifyLowBalanceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Low mess balance'**
+  String get notifyLowBalanceTitle;
+
+  /// No description provided for @notifyLowBalanceOwnBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance is running low — please top up.'**
+  String get notifyLowBalanceOwnBody;
+
+  /// No description provided for @notifyLowBalanceAdminBody.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s balance is below the warning amount.'**
+  String notifyLowBalanceAdminBody(String name);
+
   /// No description provided for @groupPollReminder.
   ///
   /// In en, this message translates to:

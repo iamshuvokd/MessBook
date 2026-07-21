@@ -25,6 +25,8 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
   bool _mealLedgerSeparate = false;
   NonVoterPolicy _defaultNonVoterPolicy = NonVoterPolicy.routine;
   int _pollReminderMinutes = 30;
+  final _lowBalanceController = TextEditingController();
+  bool _autoMealOffBelowThreshold = false;
   Group? _existing;
 
   /// Lead-time choices for the mess-wide poll reminder; 0 = off.
@@ -53,6 +55,9 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
       _mealLedgerSeparate = group.mealLedgerSeparate;
       _defaultNonVoterPolicy = group.defaultNonVoterPolicy;
       _pollReminderMinutes = group.pollReminderMinutes;
+      _lowBalanceController.text =
+          group.lowBalanceThresholdPaisa > 0 ? (group.lowBalanceThresholdPaisa / 100).toStringAsFixed(0) : '';
+      _autoMealOffBelowThreshold = group.autoMealOffBelowThreshold;
       _loading = false;
     });
   }
@@ -61,6 +66,7 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
   void dispose() {
     _nameController.dispose();
     _managerNameController.dispose();
+    _lowBalanceController.dispose();
     super.dispose();
   }
 
@@ -80,6 +86,8 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
         mealLedgerSeparate: _mealEnabled && _mealLedgerSeparate,
         defaultNonVoterPolicy: _defaultNonVoterPolicy,
         pollReminderMinutes: _pollReminderMinutes,
+        lowBalanceThresholdPaisa: ((double.tryParse(_lowBalanceController.text.trim()) ?? 0) * 100).round(),
+        autoMealOffBelowThreshold: _autoMealOffBelowThreshold,
       ));
       // Push the change up for an online mess — without this the local edit
       // is overwritten by the server's old value on the next foreground pull
@@ -238,6 +246,49 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
                               DropdownMenuItem(value: p, child: Text(_policyLabel(l10n, p), style: const TextStyle(fontSize: 12.5))),
                           ],
                           onChanged: (v) => setState(() => _defaultNonVoterPolicy = v ?? _defaultNonVoterPolicy),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 10, 14, 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.account_balance_wallet_outlined),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(l10n.groupLowBalanceThreshold, style: const TextStyle(fontWeight: FontWeight.w700)),
+                                      Text(l10n.groupLowBalanceThresholdSub, style: const TextStyle(fontSize: 12)),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 84,
+                                  child: TextField(
+                                    controller: _lowBalanceController,
+                                    keyboardType: const TextInputType.numberWithOptions(decimal: false),
+                                    textAlign: TextAlign.end,
+                                    decoration: const InputDecoration(prefixText: '৳ ', hintText: '0'),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            SwitchListTile(
+                              contentPadding: EdgeInsets.zero,
+                              value: _autoMealOffBelowThreshold,
+                              onChanged: (v) => setState(() => _autoMealOffBelowThreshold = v),
+                              title: Text(l10n.groupAutoMealOff, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 14)),
+                              subtitle: Text(l10n.groupAutoMealOffSub, style: const TextStyle(fontSize: 12)),
+                            ),
+                          ],
                         ),
                       ),
                     ),

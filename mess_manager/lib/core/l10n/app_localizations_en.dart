@@ -1336,6 +1336,44 @@ class AppLocalizationsEn extends AppLocalizations {
       'Meal costs get their own balance, settle-up and month close — kept apart from rent & other shared costs';
 
   @override
+  String get groupLowBalanceThreshold => 'Low balance warning';
+
+  @override
+  String get groupLowBalanceThresholdSub =>
+      'Warn when a member\'s remaining balance falls below this amount (0 = off)';
+
+  @override
+  String get groupAutoMealOff => 'Stop meals when balance is low';
+
+  @override
+  String get groupAutoMealOffSub =>
+      'Members below the warning amount stop getting meals added automatically until they top up';
+
+  @override
+  String get mealBalanceDeposited => 'Deposited';
+
+  @override
+  String get mealBalanceSpent => 'Meal cost';
+
+  @override
+  String get mealBalanceRemaining => 'Remaining';
+
+  @override
+  String get mealBalanceLow => 'Low balance';
+
+  @override
+  String get notifyLowBalanceTitle => 'Low mess balance';
+
+  @override
+  String get notifyLowBalanceOwnBody =>
+      'Your balance is running low — please top up.';
+
+  @override
+  String notifyLowBalanceAdminBody(String name) {
+    return '$name\'s balance is below the warning amount.';
+  }
+
+  @override
   String get groupPollReminder => 'Poll reminder';
 
   @override

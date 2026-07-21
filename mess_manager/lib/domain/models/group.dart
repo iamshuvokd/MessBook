@@ -23,6 +23,8 @@ class Group {
     this.mealLedgerSeparate = false,
     this.defaultNonVoterPolicy = NonVoterPolicy.routine,
     this.pollReminderMinutes = 30,
+    this.lowBalanceThresholdPaisa = 0,
+    this.autoMealOffBelowThreshold = false,
     required this.archived,
     required this.createdAt,
     required this.updatedAt,
@@ -48,6 +50,14 @@ class Group {
   /// Minutes before a poll closes that every member's device reminds them to
   /// vote. Mess-wide and synced so all members share one policy; 0 = off.
   final int pollReminderMinutes;
+
+  /// Warn when a member's remaining balance falls below this (paisa).
+  /// 0 = the mess hasn't set a threshold, so no low-balance warnings.
+  final int lowBalanceThresholdPaisa;
+
+  /// When true, a member under [lowBalanceThresholdPaisa] stops getting
+  /// meals added automatically until they top up.
+  final bool autoMealOffBelowThreshold;
   final bool archived;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -66,6 +76,8 @@ class Group {
     bool? mealLedgerSeparate,
     NonVoterPolicy? defaultNonVoterPolicy,
     int? pollReminderMinutes,
+    int? lowBalanceThresholdPaisa,
+    bool? autoMealOffBelowThreshold,
     bool? archived,
     String? inviteCode,
   }) {
@@ -79,6 +91,8 @@ class Group {
       mealLedgerSeparate: mealLedgerSeparate ?? this.mealLedgerSeparate,
       defaultNonVoterPolicy: defaultNonVoterPolicy ?? this.defaultNonVoterPolicy,
       pollReminderMinutes: pollReminderMinutes ?? this.pollReminderMinutes,
+      lowBalanceThresholdPaisa: lowBalanceThresholdPaisa ?? this.lowBalanceThresholdPaisa,
+      autoMealOffBelowThreshold: autoMealOffBelowThreshold ?? this.autoMealOffBelowThreshold,
       archived: archived ?? this.archived,
       createdAt: createdAt,
       updatedAt: DateTime.now(),

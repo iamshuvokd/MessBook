@@ -112,6 +112,33 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
     requiredDuringInsert: false,
     defaultValue: const Constant(30),
   );
+  static const VerificationMeta _lowBalanceThresholdPaisaMeta =
+      const VerificationMeta('lowBalanceThresholdPaisa');
+  @override
+  late final GeneratedColumn<int> lowBalanceThresholdPaisa =
+      GeneratedColumn<int>(
+        'low_balance_threshold_paisa',
+        aliasedName,
+        false,
+        type: DriftSqlType.int,
+        requiredDuringInsert: false,
+        defaultValue: const Constant(0),
+      );
+  static const VerificationMeta _autoMealOffBelowThresholdMeta =
+      const VerificationMeta('autoMealOffBelowThreshold');
+  @override
+  late final GeneratedColumn<bool> autoMealOffBelowThreshold =
+      GeneratedColumn<bool>(
+        'auto_meal_off_below_threshold',
+        aliasedName,
+        false,
+        type: DriftSqlType.bool,
+        requiredDuringInsert: false,
+        defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("auto_meal_off_below_threshold" IN (0, 1))',
+        ),
+        defaultValue: const Constant(false),
+      );
   static const VerificationMeta _archivedMeta = const VerificationMeta(
     'archived',
   );
@@ -171,6 +198,8 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
     mealLedgerSeparate,
     defaultNonVoterPolicy,
     pollReminderMinutes,
+    lowBalanceThresholdPaisa,
+    autoMealOffBelowThreshold,
     archived,
     createdAt,
     updatedAt,
@@ -261,6 +290,24 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         ),
       );
     }
+    if (data.containsKey('low_balance_threshold_paisa')) {
+      context.handle(
+        _lowBalanceThresholdPaisaMeta,
+        lowBalanceThresholdPaisa.isAcceptableOrUnknown(
+          data['low_balance_threshold_paisa']!,
+          _lowBalanceThresholdPaisaMeta,
+        ),
+      );
+    }
+    if (data.containsKey('auto_meal_off_below_threshold')) {
+      context.handle(
+        _autoMealOffBelowThresholdMeta,
+        autoMealOffBelowThreshold.isAcceptableOrUnknown(
+          data['auto_meal_off_below_threshold']!,
+          _autoMealOffBelowThresholdMeta,
+        ),
+      );
+    }
     if (data.containsKey('archived')) {
       context.handle(
         _archivedMeta,
@@ -334,6 +381,14 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         DriftSqlType.int,
         data['${effectivePrefix}poll_reminder_minutes'],
       )!,
+      lowBalanceThresholdPaisa: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}low_balance_threshold_paisa'],
+      )!,
+      autoMealOffBelowThreshold: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}auto_meal_off_below_threshold'],
+      )!,
       archived: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}archived'],
@@ -369,6 +424,8 @@ class Group extends DataClass implements Insertable<Group> {
   final bool mealLedgerSeparate;
   final String defaultNonVoterPolicy;
   final int pollReminderMinutes;
+  final int lowBalanceThresholdPaisa;
+  final bool autoMealOffBelowThreshold;
   final bool archived;
   final int createdAt;
   final int updatedAt;
@@ -383,6 +440,8 @@ class Group extends DataClass implements Insertable<Group> {
     required this.mealLedgerSeparate,
     required this.defaultNonVoterPolicy,
     required this.pollReminderMinutes,
+    required this.lowBalanceThresholdPaisa,
+    required this.autoMealOffBelowThreshold,
     required this.archived,
     required this.createdAt,
     required this.updatedAt,
@@ -400,6 +459,12 @@ class Group extends DataClass implements Insertable<Group> {
     map['meal_ledger_separate'] = Variable<bool>(mealLedgerSeparate);
     map['default_non_voter_policy'] = Variable<String>(defaultNonVoterPolicy);
     map['poll_reminder_minutes'] = Variable<int>(pollReminderMinutes);
+    map['low_balance_threshold_paisa'] = Variable<int>(
+      lowBalanceThresholdPaisa,
+    );
+    map['auto_meal_off_below_threshold'] = Variable<bool>(
+      autoMealOffBelowThreshold,
+    );
     map['archived'] = Variable<bool>(archived);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
@@ -420,6 +485,8 @@ class Group extends DataClass implements Insertable<Group> {
       mealLedgerSeparate: Value(mealLedgerSeparate),
       defaultNonVoterPolicy: Value(defaultNonVoterPolicy),
       pollReminderMinutes: Value(pollReminderMinutes),
+      lowBalanceThresholdPaisa: Value(lowBalanceThresholdPaisa),
+      autoMealOffBelowThreshold: Value(autoMealOffBelowThreshold),
       archived: Value(archived),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -448,6 +515,12 @@ class Group extends DataClass implements Insertable<Group> {
       pollReminderMinutes: serializer.fromJson<int>(
         json['pollReminderMinutes'],
       ),
+      lowBalanceThresholdPaisa: serializer.fromJson<int>(
+        json['lowBalanceThresholdPaisa'],
+      ),
+      autoMealOffBelowThreshold: serializer.fromJson<bool>(
+        json['autoMealOffBelowThreshold'],
+      ),
       archived: serializer.fromJson<bool>(json['archived']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -467,6 +540,12 @@ class Group extends DataClass implements Insertable<Group> {
       'mealLedgerSeparate': serializer.toJson<bool>(mealLedgerSeparate),
       'defaultNonVoterPolicy': serializer.toJson<String>(defaultNonVoterPolicy),
       'pollReminderMinutes': serializer.toJson<int>(pollReminderMinutes),
+      'lowBalanceThresholdPaisa': serializer.toJson<int>(
+        lowBalanceThresholdPaisa,
+      ),
+      'autoMealOffBelowThreshold': serializer.toJson<bool>(
+        autoMealOffBelowThreshold,
+      ),
       'archived': serializer.toJson<bool>(archived),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -484,6 +563,8 @@ class Group extends DataClass implements Insertable<Group> {
     bool? mealLedgerSeparate,
     String? defaultNonVoterPolicy,
     int? pollReminderMinutes,
+    int? lowBalanceThresholdPaisa,
+    bool? autoMealOffBelowThreshold,
     bool? archived,
     int? createdAt,
     int? updatedAt,
@@ -498,6 +579,10 @@ class Group extends DataClass implements Insertable<Group> {
     mealLedgerSeparate: mealLedgerSeparate ?? this.mealLedgerSeparate,
     defaultNonVoterPolicy: defaultNonVoterPolicy ?? this.defaultNonVoterPolicy,
     pollReminderMinutes: pollReminderMinutes ?? this.pollReminderMinutes,
+    lowBalanceThresholdPaisa:
+        lowBalanceThresholdPaisa ?? this.lowBalanceThresholdPaisa,
+    autoMealOffBelowThreshold:
+        autoMealOffBelowThreshold ?? this.autoMealOffBelowThreshold,
     archived: archived ?? this.archived,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -526,6 +611,12 @@ class Group extends DataClass implements Insertable<Group> {
       pollReminderMinutes: data.pollReminderMinutes.present
           ? data.pollReminderMinutes.value
           : this.pollReminderMinutes,
+      lowBalanceThresholdPaisa: data.lowBalanceThresholdPaisa.present
+          ? data.lowBalanceThresholdPaisa.value
+          : this.lowBalanceThresholdPaisa,
+      autoMealOffBelowThreshold: data.autoMealOffBelowThreshold.present
+          ? data.autoMealOffBelowThreshold.value
+          : this.autoMealOffBelowThreshold,
       archived: data.archived.present ? data.archived.value : this.archived,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -547,6 +638,8 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('mealLedgerSeparate: $mealLedgerSeparate, ')
           ..write('defaultNonVoterPolicy: $defaultNonVoterPolicy, ')
           ..write('pollReminderMinutes: $pollReminderMinutes, ')
+          ..write('lowBalanceThresholdPaisa: $lowBalanceThresholdPaisa, ')
+          ..write('autoMealOffBelowThreshold: $autoMealOffBelowThreshold, ')
           ..write('archived: $archived, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -566,6 +659,8 @@ class Group extends DataClass implements Insertable<Group> {
     mealLedgerSeparate,
     defaultNonVoterPolicy,
     pollReminderMinutes,
+    lowBalanceThresholdPaisa,
+    autoMealOffBelowThreshold,
     archived,
     createdAt,
     updatedAt,
@@ -584,6 +679,8 @@ class Group extends DataClass implements Insertable<Group> {
           other.mealLedgerSeparate == this.mealLedgerSeparate &&
           other.defaultNonVoterPolicy == this.defaultNonVoterPolicy &&
           other.pollReminderMinutes == this.pollReminderMinutes &&
+          other.lowBalanceThresholdPaisa == this.lowBalanceThresholdPaisa &&
+          other.autoMealOffBelowThreshold == this.autoMealOffBelowThreshold &&
           other.archived == this.archived &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -600,6 +697,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   final Value<bool> mealLedgerSeparate;
   final Value<String> defaultNonVoterPolicy;
   final Value<int> pollReminderMinutes;
+  final Value<int> lowBalanceThresholdPaisa;
+  final Value<bool> autoMealOffBelowThreshold;
   final Value<bool> archived;
   final Value<int> createdAt;
   final Value<int> updatedAt;
@@ -615,6 +714,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.mealLedgerSeparate = const Value.absent(),
     this.defaultNonVoterPolicy = const Value.absent(),
     this.pollReminderMinutes = const Value.absent(),
+    this.lowBalanceThresholdPaisa = const Value.absent(),
+    this.autoMealOffBelowThreshold = const Value.absent(),
     this.archived = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -631,6 +732,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.mealLedgerSeparate = const Value.absent(),
     this.defaultNonVoterPolicy = const Value.absent(),
     this.pollReminderMinutes = const Value.absent(),
+    this.lowBalanceThresholdPaisa = const Value.absent(),
+    this.autoMealOffBelowThreshold = const Value.absent(),
     this.archived = const Value.absent(),
     required int createdAt,
     required int updatedAt,
@@ -650,6 +753,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Expression<bool>? mealLedgerSeparate,
     Expression<String>? defaultNonVoterPolicy,
     Expression<int>? pollReminderMinutes,
+    Expression<int>? lowBalanceThresholdPaisa,
+    Expression<bool>? autoMealOffBelowThreshold,
     Expression<bool>? archived,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
@@ -669,6 +774,10 @@ class GroupsCompanion extends UpdateCompanion<Group> {
         'default_non_voter_policy': defaultNonVoterPolicy,
       if (pollReminderMinutes != null)
         'poll_reminder_minutes': pollReminderMinutes,
+      if (lowBalanceThresholdPaisa != null)
+        'low_balance_threshold_paisa': lowBalanceThresholdPaisa,
+      if (autoMealOffBelowThreshold != null)
+        'auto_meal_off_below_threshold': autoMealOffBelowThreshold,
       if (archived != null) 'archived': archived,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -687,6 +796,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Value<bool>? mealLedgerSeparate,
     Value<String>? defaultNonVoterPolicy,
     Value<int>? pollReminderMinutes,
+    Value<int>? lowBalanceThresholdPaisa,
+    Value<bool>? autoMealOffBelowThreshold,
     Value<bool>? archived,
     Value<int>? createdAt,
     Value<int>? updatedAt,
@@ -704,6 +815,10 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       defaultNonVoterPolicy:
           defaultNonVoterPolicy ?? this.defaultNonVoterPolicy,
       pollReminderMinutes: pollReminderMinutes ?? this.pollReminderMinutes,
+      lowBalanceThresholdPaisa:
+          lowBalanceThresholdPaisa ?? this.lowBalanceThresholdPaisa,
+      autoMealOffBelowThreshold:
+          autoMealOffBelowThreshold ?? this.autoMealOffBelowThreshold,
       archived: archived ?? this.archived,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -744,6 +859,16 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     if (pollReminderMinutes.present) {
       map['poll_reminder_minutes'] = Variable<int>(pollReminderMinutes.value);
     }
+    if (lowBalanceThresholdPaisa.present) {
+      map['low_balance_threshold_paisa'] = Variable<int>(
+        lowBalanceThresholdPaisa.value,
+      );
+    }
+    if (autoMealOffBelowThreshold.present) {
+      map['auto_meal_off_below_threshold'] = Variable<bool>(
+        autoMealOffBelowThreshold.value,
+      );
+    }
     if (archived.present) {
       map['archived'] = Variable<bool>(archived.value);
     }
@@ -774,6 +899,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('mealLedgerSeparate: $mealLedgerSeparate, ')
           ..write('defaultNonVoterPolicy: $defaultNonVoterPolicy, ')
           ..write('pollReminderMinutes: $pollReminderMinutes, ')
+          ..write('lowBalanceThresholdPaisa: $lowBalanceThresholdPaisa, ')
+          ..write('autoMealOffBelowThreshold: $autoMealOffBelowThreshold, ')
           ..write('archived: $archived, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -9290,6 +9417,8 @@ typedef $$GroupsTableCreateCompanionBuilder =
       Value<bool> mealLedgerSeparate,
       Value<String> defaultNonVoterPolicy,
       Value<int> pollReminderMinutes,
+      Value<int> lowBalanceThresholdPaisa,
+      Value<bool> autoMealOffBelowThreshold,
       Value<bool> archived,
       required int createdAt,
       required int updatedAt,
@@ -9307,6 +9436,8 @@ typedef $$GroupsTableUpdateCompanionBuilder =
       Value<bool> mealLedgerSeparate,
       Value<String> defaultNonVoterPolicy,
       Value<int> pollReminderMinutes,
+      Value<int> lowBalanceThresholdPaisa,
+      Value<bool> autoMealOffBelowThreshold,
       Value<bool> archived,
       Value<int> createdAt,
       Value<int> updatedAt,
@@ -9591,6 +9722,16 @@ class $$GroupsTableFilterComposer
 
   ColumnFilters<int> get pollReminderMinutes => $composableBuilder(
     column: $table.pollReminderMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get lowBalanceThresholdPaisa => $composableBuilder(
+    column: $table.lowBalanceThresholdPaisa,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get autoMealOffBelowThreshold => $composableBuilder(
+    column: $table.autoMealOffBelowThreshold,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9969,6 +10110,16 @@ class $$GroupsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get lowBalanceThresholdPaisa => $composableBuilder(
+    column: $table.lowBalanceThresholdPaisa,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get autoMealOffBelowThreshold => $composableBuilder(
+    column: $table.autoMealOffBelowThreshold,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get archived => $composableBuilder(
     column: $table.archived,
     builder: (column) => ColumnOrderings(column),
@@ -10035,6 +10186,16 @@ class $$GroupsTableAnnotationComposer
 
   GeneratedColumn<int> get pollReminderMinutes => $composableBuilder(
     column: $table.pollReminderMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get lowBalanceThresholdPaisa => $composableBuilder(
+    column: $table.lowBalanceThresholdPaisa,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get autoMealOffBelowThreshold => $composableBuilder(
+    column: $table.autoMealOffBelowThreshold,
     builder: (column) => column,
   );
 
@@ -10403,6 +10564,8 @@ class $$GroupsTableTableManager
                 Value<bool> mealLedgerSeparate = const Value.absent(),
                 Value<String> defaultNonVoterPolicy = const Value.absent(),
                 Value<int> pollReminderMinutes = const Value.absent(),
+                Value<int> lowBalanceThresholdPaisa = const Value.absent(),
+                Value<bool> autoMealOffBelowThreshold = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
@@ -10418,6 +10581,8 @@ class $$GroupsTableTableManager
                 mealLedgerSeparate: mealLedgerSeparate,
                 defaultNonVoterPolicy: defaultNonVoterPolicy,
                 pollReminderMinutes: pollReminderMinutes,
+                lowBalanceThresholdPaisa: lowBalanceThresholdPaisa,
+                autoMealOffBelowThreshold: autoMealOffBelowThreshold,
                 archived: archived,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -10435,6 +10600,8 @@ class $$GroupsTableTableManager
                 Value<bool> mealLedgerSeparate = const Value.absent(),
                 Value<String> defaultNonVoterPolicy = const Value.absent(),
                 Value<int> pollReminderMinutes = const Value.absent(),
+                Value<int> lowBalanceThresholdPaisa = const Value.absent(),
+                Value<bool> autoMealOffBelowThreshold = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
@@ -10450,6 +10617,8 @@ class $$GroupsTableTableManager
                 mealLedgerSeparate: mealLedgerSeparate,
                 defaultNonVoterPolicy: defaultNonVoterPolicy,
                 pollReminderMinutes: pollReminderMinutes,
+                lowBalanceThresholdPaisa: lowBalanceThresholdPaisa,
+                autoMealOffBelowThreshold: autoMealOffBelowThreshold,
                 archived: archived,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
