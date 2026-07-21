@@ -131,6 +131,29 @@ void main() {
     expect((await polls.watchPoll(pollId).first)!.closed, isTrue);
   });
 
+  test('closing a still-open poll early applies votes to the meal sheet immediately', () async {
+    final member = await members.addMember(groupId: groupId, name: 'Alice');
+    // An OPEN poll (closes in the future) — "Close now" should still apply it.
+    final pollId = await polls.createPoll(
+      groupId: groupId,
+      date: today,
+      type: PollType.count,
+      closeAt: today.add(const Duration(hours: 6)),
+      createdByMemberId: creatorId,
+    );
+    await polls.castVote(pollId: pollId, memberId: member.id, value: PollVote(pollId: pollId, memberId: member.id, count: 2, votedAt: today));
+
+    // No meal yet — votes only apply on close.
+    expect(await meals.getMealRow(groupId, member.id, today), isNull);
+
+    await polls.closePoll(pollId); // what "Close now & apply" invokes
+
+    final row = await meals.getMealRow(groupId, member.id, today);
+    expect(row, isNotNull);
+    expect(row!.count, 2);
+    expect((await polls.watchPoll(pollId).first)!.closed, isTrue);
+  });
+
   test('deletePoll removes the poll and its votes, leaving meals intact', () async {
     final member = await members.addMember(groupId: groupId, name: 'Alice');
     final pollId = await polls.createPoll(

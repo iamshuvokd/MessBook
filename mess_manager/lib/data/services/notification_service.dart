@@ -15,6 +15,7 @@ class NotificationService {
   static const _backupOverdueId = 1003;
   static const _chatMessageId = 1004;
   static const _memberJoinedId = 1005;
+  static const _pollCreatedId = 1006;
   // Recurring-expense-due ids start at 2000 + dayOfMonth to keep them stable per rule.
   static int recurringDueId(int dayOfMonth) => 2000 + dayOfMonth;
   static int pollReminderId(String pollId) => 3000 + (pollId.hashCode.abs() % 100000);
@@ -175,6 +176,18 @@ class NotificationService {
       body: body,
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails('member_joined', 'Mess membership', importance: Importance.defaultImportance),
+      ),
+    );
+  }
+
+  Future<void> showPollCreated({required String title, required String body}) async {
+    await init();
+    await _plugin.show(
+      id: _pollCreatedId,
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails('poll_created', 'Meal polls', importance: Importance.defaultImportance),
       ),
     );
   }

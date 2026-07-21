@@ -77,14 +77,26 @@ class PollDetailScreen extends ConsumerWidget {
               tooltip: l10n.pollReopen,
               onPressed: () => _reopenPoll(context, ref, pollForAppBar),
             ),
-          // Delete — a pollsManage action, available for any poll (open or
-          // closed). In its own overflow menu so it's a deliberate choice.
+          // Manage actions (pollsManage). "Close now" applies a still-open
+          // poll's votes to the meal sheet immediately; Delete removes it.
           if (canManage && pollForAppBar != null)
             PopupMenuButton<String>(
               onSelected: (v) {
+                if (v == 'closeNow') _closeNow(context, ref, pollForAppBar);
                 if (v == 'delete') _deletePoll(context, ref);
               },
               itemBuilder: (context) => [
+                if (!pollForAppBar.closed)
+                  PopupMenuItem(
+                    value: 'closeNow',
+                    child: Row(
+                      children: [
+                        const Icon(Icons.done_all_rounded, size: 20),
+                        const SizedBox(width: 10),
+                        Text(l10n.pollCloseNow),
+                      ],
+                    ),
+                  ),
                 PopupMenuItem(
                   value: 'delete',
                   child: Row(
@@ -189,6 +201,18 @@ class PollDetailScreen extends ConsumerWidget {
         PollType.count => l10n.pollVoteCountQuestion,
         PollType.menu => l10n.pollVoteMenuQuestion,
       };
+
+  /// Closes an open poll immediately and applies every vote (plus the
+  /// non-voter policy) to the meal sheet, instead of waiting for the close
+  /// time to pass and the next app open. Syncs so all members see it.
+  Future<void> _closeNow(BuildContext context, WidgetRef ref, MealPoll poll) async {
+    final l10n = AppLocalizations.of(context);
+    await ref.read(pollsRepositoryProvider).closePoll(poll.id);
+    triggerBackgroundSync(ref, groupId);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.pollClosedApplied)));
+    }
+  }
 
   /// Deletes the poll (pollsManage only). Local delete first, then the
   /// server delete for an online mess so it doesn't reappear on the next

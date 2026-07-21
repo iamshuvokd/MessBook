@@ -55,12 +55,14 @@ class PushService {
 
   Future<void> _handleForeground(RemoteMessage message) async {
     final groupId = message.data['groupId'];
-    final isMemberJoined = message.data['type'] == 'memberJoined';
+    final type = message.data['type'];
+    final isMemberJoined = type == 'memberJoined';
+    final isPollCreated = type == 'pollCreated';
 
     // The sync fires regardless of whether there's a visible notification to
-    // show — it's what actually makes a newly-added member (or anything else
-    // this push type covers later) show up without a manual pull-to-refresh.
-    if (isMemberJoined && groupId is String && groupId.isNotEmpty) {
+    // show — it's what actually makes the new member/poll show up without a
+    // manual pull-to-refresh.
+    if ((isMemberJoined || isPollCreated) && groupId is String && groupId.isNotEmpty) {
       unawaited(_sync.syncGroup(groupId));
     }
 
@@ -68,6 +70,8 @@ class PushService {
     if (notification == null) return;
     if (isMemberJoined) {
       await _notifications.showMemberJoined(title: notification.title ?? '', body: notification.body ?? '');
+    } else if (isPollCreated) {
+      await _notifications.showPollCreated(title: notification.title ?? '', body: notification.body ?? '');
     } else {
       await _notifications.showChatMessage(title: notification.title ?? '', body: notification.body ?? '');
     }
@@ -76,9 +80,13 @@ class PushService {
   void _handleOpened(RemoteMessage message) {
     final groupId = message.data['groupId'];
     if (groupId is! String || groupId.isEmpty) return;
-    if (message.data['type'] == 'memberJoined') {
+    final type = message.data['type'];
+    if (type == 'memberJoined') {
       unawaited(_sync.syncGroup(groupId));
       appRouter.push('/groups/$groupId/members');
+    } else if (type == 'pollCreated') {
+      unawaited(_sync.syncGroup(groupId));
+      appRouter.push('/groups/$groupId/polls');
     } else {
       appRouter.push('/groups/$groupId/chat');
     }

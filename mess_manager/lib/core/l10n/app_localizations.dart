@@ -2762,6 +2762,12 @@ abstract class AppLocalizations {
   /// **'Closes at'**
   String get pollCloseAt;
 
+  /// No description provided for @pollForDateLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'For date'**
+  String get pollForDateLabel;
+
   /// No description provided for @pollNonVoterOverride.
   ///
   /// In en, this message translates to:
@@ -2857,6 +2863,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Delete this poll and all its votes? This can\'t be undone. Meals already recorded from it stay in the sheet.'**
   String get pollDeleteConfirm;
+
+  /// No description provided for @pollCloseNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Close now & apply'**
+  String get pollCloseNow;
+
+  /// No description provided for @pollClosedApplied.
+  ///
+  /// In en, this message translates to:
+  /// **'Poll closed — results applied to the meal sheet.'**
+  String get pollClosedApplied;
 
   /// No description provided for @pollVotedCount.
   ///

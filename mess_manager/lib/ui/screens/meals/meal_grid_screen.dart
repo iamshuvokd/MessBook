@@ -45,6 +45,7 @@ class MealGridScreen extends ConsumerWidget {
     });
 
     ref.watch(foregroundGroupSyncProvider); // near-live: re-sync while open
+    ref.watch(autoCloseDuePollsProvider); // apply any past-due poll results to the grid
     final locale = ref.watch(localeProvider);
     final banglaDigits = ref.watch(banglaDigitsProvider);
     final fmt = BdFormatter(useBanglaDigits: banglaDigits, locale: locale.languageCode);

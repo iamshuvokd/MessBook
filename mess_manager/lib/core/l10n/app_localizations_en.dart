@@ -1475,6 +1475,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pollCloseAt => 'Closes at';
 
   @override
+  String get pollForDateLabel => 'For date';
+
+  @override
   String get pollNonVoterOverride => 'Non-voter rule for this poll';
 
   @override
@@ -1525,6 +1528,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get pollDeleteConfirm =>
       'Delete this poll and all its votes? This can\'t be undone. Meals already recorded from it stay in the sheet.';
+
+  @override
+  String get pollCloseNow => 'Close now & apply';
+
+  @override
+  String get pollClosedApplied =>
+      'Poll closed — results applied to the meal sheet.';
 
   @override
   String pollVotedCount(String voted, String total) {

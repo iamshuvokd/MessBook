@@ -23,6 +23,9 @@ class _CreatePollSheetState extends ConsumerState<CreatePollSheet> {
   late PollType _type = widget.existing?.type ?? PollType.slots;
   late final _titleController = TextEditingController(text: widget.existing?.title ?? '');
   late final _optionsController = TextEditingController(text: widget.existing?.options.join('\n') ?? '');
+  // The meal date this poll is for. Editable on create; an existing poll
+  // keeps its date. Defaults to today.
+  late DateTime _pollDate = widget.existing?.date ?? DateTime.now();
   late TimeOfDay _closeTime =
       widget.existing != null ? TimeOfDay.fromDateTime(widget.existing!.closeAt) : const TimeOfDay(hour: 21, minute: 0);
   late NonVoterPolicy? _policyOverride = widget.existing?.nonVoterPolicy; // null = use mess default
@@ -51,11 +54,12 @@ class _CreatePollSheetState extends ConsumerState<CreatePollSheet> {
 
     setState(() => _saving = true);
     final now = DateTime.now();
-    // When editing, the close time applies to the poll's own date; when
-    // creating, to today (bumped to tomorrow if the time already passed).
-    final baseDate = _isEdit ? widget.existing!.date : now;
-    var closeAt = DateTime(baseDate.year, baseDate.month, baseDate.day, _closeTime.hour, _closeTime.minute);
-    if (!_isEdit && closeAt.isBefore(now)) closeAt = closeAt.add(const Duration(days: 1));
+    // The close time applies to the chosen poll date. For a same-day poll
+    // whose time already passed, bump to tomorrow so it doesn't create
+    // already-closed; a future-dated poll keeps its chosen date as-is.
+    var closeAt = DateTime(_pollDate.year, _pollDate.month, _pollDate.day, _closeTime.hour, _closeTime.minute);
+    final sameDay = _pollDate.year == now.year && _pollDate.month == now.month && _pollDate.day == now.day;
+    if (!_isEdit && sameDay && closeAt.isBefore(now)) closeAt = closeAt.add(const Duration(days: 1));
 
     final options = _type == PollType.menu
         ? _optionsController.text.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList()
@@ -79,7 +83,7 @@ class _CreatePollSheetState extends ConsumerState<CreatePollSheet> {
       final createdBy = actingAs?.id ?? (members.isNotEmpty ? members.first.id : '');
       pollId = await ref.read(pollsRepositoryProvider).createPoll(
             groupId: widget.groupId,
-            date: now,
+            date: _pollDate,
             type: _type,
             title: title,
             options: options,
@@ -138,6 +142,25 @@ class _CreatePollSheetState extends ConsumerState<CreatePollSheet> {
               ),
             ],
             const SizedBox(height: 14),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.event_outlined),
+              title: Text(l10n.pollForDateLabel),
+              trailing: TextButton(
+                onPressed: _isEdit
+                    ? null // an existing poll's meal date is fixed
+                    : () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: _pollDate,
+                          firstDate: DateTime.now().subtract(const Duration(days: 7)),
+                          lastDate: DateTime.now().add(const Duration(days: 60)),
+                        );
+                        if (picked != null) setState(() => _pollDate = picked);
+                      },
+                child: Text(MaterialLocalizations.of(context).formatMediumDate(_pollDate)),
+              ),
+            ),
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.timer_outlined),

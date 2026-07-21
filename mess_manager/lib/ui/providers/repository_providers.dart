@@ -298,6 +298,17 @@ final pollsOfSelectedGroupProvider = StreamProvider.autoDispose<List<MealPoll>>(
   return ref.watch(pollsRepositoryProvider).watchPolls(groupId);
 });
 
+/// Closes any past-due polls for the selected group when a meal screen
+/// mounts, so a poll's results reach the meal grid without waiting for the
+/// next cold app-open (the only other place `closeDuePolls` runs).
+/// Idempotent — an already-closed poll is skipped, and it depends only on
+/// the stable group id so it runs once per screen mount, not on every write.
+final autoCloseDuePollsProvider = FutureProvider.autoDispose<void>((ref) async {
+  final groupId = ref.watch(selectedGroupIdProvider);
+  if (groupId == null) return;
+  await ref.read(pollsRepositoryProvider).closeDuePolls(groupId);
+});
+
 /// Today's open poll for the selected group, if any.
 final todaysOpenPollProvider = Provider.autoDispose<MealPoll?>((ref) {
   final polls = ref.watch(pollsOfSelectedGroupProvider).value ?? const [];

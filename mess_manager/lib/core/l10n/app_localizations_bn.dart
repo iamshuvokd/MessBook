@@ -1467,6 +1467,9 @@ class AppLocalizationsBn extends AppLocalizations {
   String get pollCloseAt => 'বন্ধ হবে';
 
   @override
+  String get pollForDateLabel => 'যে তারিখের জন্য';
+
+  @override
   String get pollNonVoterOverride => 'এই পোলের জন্য নন-ভোটার নিয়ম';
 
   @override
@@ -1517,6 +1520,12 @@ class AppLocalizationsBn extends AppLocalizations {
   @override
   String get pollDeleteConfirm =>
       'এই পোল ও এর সব ভোট মুছে ফেলবেন? এটি আর ফেরানো যাবে না। এখান থেকে যোগ হওয়া মিল শিটে থেকে যাবে।';
+
+  @override
+  String get pollCloseNow => 'এখনই বন্ধ করে প্রয়োগ করুন';
+
+  @override
+  String get pollClosedApplied => 'পোল বন্ধ — ফলাফল মিল শিটে প্রয়োগ হয়েছে।';
 
   @override
   String pollVotedCount(String voted, String total) {
