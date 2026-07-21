@@ -712,29 +712,47 @@ final realtimeServiceProvider = Provider.autoDispose<RealtimeService>((ref) {
 /// waiting for the timer below. The timer stays as a resilience fallback —
 /// it covers the gap while the socket is (re)connecting or unreachable,
 /// matching the app's offline-first "degrade gracefully" doctrine.
+/// Whether the selected group is online (has an invite code). Watched by
+/// [foregroundGroupSyncProvider] to decide when to open the live socket.
+/// Crucially it exposes a *bool*: even though it re-reads `activeGroups`
+/// (which every sync rewrites), the value only changes false→true once, so
+/// a watcher is re-run exactly on that flip — not on every groups-table
+/// write — which is what avoids the infinite sync loop while still letting
+/// the socket open once the group list has actually loaded.
+final selectedGroupOnlineProvider = Provider.autoDispose<bool>((ref) {
+  final groupId = ref.watch(selectedGroupIdProvider);
+  if (groupId == null) return false;
+  final groups = ref.watch(activeGroupsProvider).value ?? const [];
+  return groups.any((g) => g.id == groupId && g.isOnline);
+});
+
 final foregroundGroupSyncProvider = Provider.autoDispose<void>((ref) {
-  // Depend ONLY on the (stable) selected group id. Deliberately do NOT watch
-  // the group row or online flag here: every sync writes the groups table,
-  // which would re-run this provider and fire another sync — an infinite
-  // loop. Online-status is re-checked inside the tick via ref.read, which
-  // creates no dependency.
   final groupId = ref.watch(selectedGroupIdProvider);
   if (groupId == null) return;
 
+  // Watch the derived online BOOL (not activeGroups directly). This re-runs
+  // the provider exactly when the group's online status flips true — which
+  // is the fix for the live socket: previously the socket-open decision was
+  // read once at build time, so if activeGroups hadn't loaded yet when the
+  // screen mounted, the socket never opened and live updates silently fell
+  // back to the 15s poll. Watching a bool that only flips once means the
+  // socket opens as soon as the group list loads, without the infinite loop
+  // that watching activeGroups directly would cause.
+  final online = ref.watch(selectedGroupOnlineProvider);
+
   final sync = ref.read(syncServiceProvider);
   void tick() {
+    // Re-read fresh so the fallback timer stays correct regardless.
     final groups = ref.read(activeGroupsProvider).value ?? const [];
-    final online = groups.any((g) => g.id == groupId && g.isOnline);
-    // Pull-only: just fetch others' changes; our own writes push separately.
-    if (online) unawaited(sync.pullGroup(groupId).catchError((_) {}));
+    if (groups.any((g) => g.id == groupId && g.isOnline)) {
+      unawaited(sync.pullGroup(groupId).catchError((_) {}));
+    }
   }
 
   tick(); // refresh immediately on entering a screen
   final timer = Timer.periodic(const Duration(seconds: 15), (_) => tick());
   ref.onDispose(timer.cancel);
 
-  final groups = ref.read(activeGroupsProvider).value ?? const [];
-  final online = groups.any((g) => g.id == groupId && g.isOnline);
   if (online) {
     final realtime = ref.read(realtimeServiceProvider);
     unawaited(realtime.connectAndJoin(groupId));
