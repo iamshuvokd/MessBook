@@ -36,6 +36,7 @@ class MealSlotsScreen extends ConsumerWidget {
         ref.read(selectedGroupIdProvider.notifier).select(groupId);
       }
     });
+ref.watch(foregroundGroupSyncProvider); // live sync while this screen is open
 
     final slots = ref.watch(slotsOfSelectedGroupProvider);
     final canManage = ref.watch(canProvider(MemberPermission.mealsManage));

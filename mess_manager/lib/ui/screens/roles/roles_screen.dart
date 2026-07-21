@@ -26,6 +26,7 @@ class RolesScreen extends ConsumerWidget {
         ref.read(selectedGroupIdProvider.notifier).select(groupId);
       }
     });
+ref.watch(foregroundGroupSyncProvider); // live sync while this screen is open
 
     final members = ref.watch(membersOfSelectedGroupProvider).value ?? const <Member>[];
     final activeMembers = members.where((m) => m.active).toList();

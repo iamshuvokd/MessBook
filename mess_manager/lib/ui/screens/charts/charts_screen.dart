@@ -33,6 +33,7 @@ class ChartsScreen extends ConsumerWidget {
         ref.read(selectedGroupIdProvider.notifier).select(groupId);
       }
     });
+ref.watch(foregroundGroupSyncProvider); // live sync while this screen is open
 
     final locale = ref.watch(localeProvider);
     final banglaDigits = ref.watch(banglaDigitsProvider);

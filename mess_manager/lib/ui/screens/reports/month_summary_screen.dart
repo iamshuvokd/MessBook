@@ -48,6 +48,8 @@ class _MonthSummaryScreenState extends ConsumerState<MonthSummaryScreen> {
       }
     });
 
+    ref.watch(foregroundGroupSyncProvider); // live sync while this screen is open
+
     final locale = ref.watch(localeProvider);
     final banglaDigits = ref.watch(banglaDigitsProvider);
     final fmt = BdFormatter(useBanglaDigits: banglaDigits, locale: locale.languageCode);

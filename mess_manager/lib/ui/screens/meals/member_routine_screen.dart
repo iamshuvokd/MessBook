@@ -46,6 +46,8 @@ class _MemberRoutineScreenState extends ConsumerState<MemberRoutineScreen> {
       }
     });
 
+    ref.watch(foregroundGroupSyncProvider); // live sync while this screen is open
+
     final slots = ref.watch(activeSlotsOfSelectedGroupProvider).value ?? const [];
     final routines = ref.watch(routinesOfMemberProvider(widget.memberId)).value ?? const [];
     final leaves = ref.watch(leavesOfMemberProvider(widget.memberId)).value ?? const [];

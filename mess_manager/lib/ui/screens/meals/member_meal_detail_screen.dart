@@ -18,6 +18,7 @@ class MemberMealDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    ref.watch(foregroundGroupSyncProvider); // live sync while this screen is open
     final locale = ref.watch(localeProvider);
     final banglaDigits = ref.watch(banglaDigitsProvider);
     final fmt = BdFormatter(useBanglaDigits: banglaDigits, locale: locale.languageCode);

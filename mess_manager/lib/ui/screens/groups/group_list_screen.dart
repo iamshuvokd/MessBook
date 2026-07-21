@@ -14,6 +14,7 @@ class GroupListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    ref.watch(foregroundGroupSyncProvider); // live sync while this screen is open
     final groups = ref.watch(activeGroupsProvider);
     final premium = ref.watch(premiumUnlockedProvider).value ?? false;
     final groupCount = groups.value?.length ?? 0;
