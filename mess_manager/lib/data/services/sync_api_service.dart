@@ -113,6 +113,12 @@ class SyncApiService {
     await _api.delete('/groups/$groupId/polls/$pollId');
   }
 
+  /// Same deal for a bazar duty — a local-only delete reappears on the next
+  /// pull, which is why the cross button looked like it did nothing.
+  Future<void> deleteBazarDutyRemote(String groupId, String dutyId) async {
+    await _api.delete('/groups/$groupId/bazar/$dutyId');
+  }
+
   /// Hands the App Admin role (and server-side mess ownership) to another
   /// already-joined member. The server does the role swap + `owner_user_id`
   /// move in one call; the caller must still be the App Admin server-side at

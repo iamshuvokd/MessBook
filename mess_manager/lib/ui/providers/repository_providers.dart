@@ -493,6 +493,14 @@ final backupServiceProvider = Provider<BackupService>((ref) {
   return BackupService(ref.watch(databaseProvider));
 });
 
+/// The nightly meal-reminder time as stored (`HH:mm`), defaulting to 22:00.
+final dailyMealReminderProvider = StreamProvider.autoDispose<String>((ref) {
+  return ref
+      .watch(appSettingsRepositoryProvider)
+      .watch(dailyMealReminderSettingKey)
+      .map((v) => v ?? defaultDailyMealReminder);
+});
+
 final lastBackupAtProvider = StreamProvider.autoDispose<DateTime?>((ref) {
   return ref.watch(appSettingsRepositoryProvider).watch(lastBackupAtSettingKey).map(
         (value) => value == null ? null : DateTime.fromMillisecondsSinceEpoch(int.parse(value)),
@@ -575,9 +583,10 @@ final appOpenTasksProvider = FutureProvider<void>((ref) async {
     }
   }
 
+  final mealReminderAt = parseReminderTime(await settings.get(dailyMealReminderSettingKey));
   await notifications.scheduleDailyMealReminder(
-    hour: 22,
-    minute: 0,
+    hour: mealReminderAt.hour,
+    minute: mealReminderAt.minute,
     title: l10n.notifyMealReminderTitle,
     body: l10n.notifyMealReminderBody,
   );

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../data/repositories/app_settings_repository.dart';
 import '../../../domain/models/member_permission.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/repository_providers.dart';
@@ -161,12 +162,35 @@ class SettingsScreen extends ConsumerWidget {
           Card(
             child: Column(
               children: [
-                ListTile(
-                  leading: const Icon(Icons.restaurant_rounded),
-                  title: Text(l10n.settingsDailyMealReminder),
-                  subtitle: Text(l10n.settingsEveryNight, style: const TextStyle(fontSize: 11.5)),
-                  trailing: Text(l10n.settingsDailyMealReminderTime, style: const TextStyle(fontFamily: moneyFontFamily, fontWeight: FontWeight.w700)),
-                ),
+                Builder(builder: (tileContext) {
+                  final stored = ref.watch(dailyMealReminderProvider).value ?? defaultDailyMealReminder;
+                  final parsed = parseReminderTime(stored);
+                  final asTimeOfDay = TimeOfDay(hour: parsed.hour, minute: parsed.minute);
+                  return ListTile(
+                    leading: const Icon(Icons.restaurant_rounded),
+                    title: Text(l10n.settingsDailyMealReminder),
+                    subtitle: Text(l10n.settingsEveryNight, style: const TextStyle(fontSize: 11.5)),
+                    trailing: Text(
+                      asTimeOfDay.format(tileContext),
+                      style: const TextStyle(fontFamily: moneyFontFamily, fontWeight: FontWeight.w700),
+                    ),
+                    onTap: () async {
+                      final picked = await showTimePicker(context: tileContext, initialTime: asTimeOfDay);
+                      if (picked == null) return;
+                      await ref
+                          .read(appSettingsRepositoryProvider)
+                          .set(dailyMealReminderSettingKey, formatReminderTime(picked.hour, picked.minute));
+                      // Re-arm the notification straight away so the new time
+                      // applies tonight, not from the next app open.
+                      await ref.read(notificationServiceProvider).scheduleDailyMealReminder(
+                            hour: picked.hour,
+                            minute: picked.minute,
+                            title: l10n.notifyMealReminderTitle,
+                            body: l10n.notifyMealReminderBody,
+                          );
+                    },
+                  );
+                }),
                 ListTile(
                   leading: const Icon(Icons.event_available_rounded),
                   title: Text(l10n.settingsMonthCloseReminder),

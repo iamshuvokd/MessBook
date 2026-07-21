@@ -94,9 +94,19 @@ ref.watch(foregroundGroupSyncProvider); // live sync while this screen is open
                                 ),
                                 IconButton(
                                   icon: const Icon(Icons.close_rounded, size: 18),
-                                  onPressed: () {
-                                    ref.read(bazarRepositoryProvider).deleteDuty(duty.id);
-                                    triggerBackgroundSync(ref, groupId);
+                                  onPressed: () async {
+                                    await ref.read(bazarRepositoryProvider).deleteDuty(duty.id);
+                                    // Sync only upserts, so a local-only delete
+                                    // reappears on the next pull — tell the
+                                    // server too for an online mess.
+                                    final group = ref.read(selectedGroupProvider);
+                                    if (group?.isOnline ?? false) {
+                                      try {
+                                        await ref.read(syncApiServiceProvider).deleteBazarDutyRemote(groupId, duty.id);
+                                      } catch (_) {
+                                        // Local delete stands; a later sync retries the server side.
+                                      }
+                                    }
                                   },
                                 ),
                               ],
