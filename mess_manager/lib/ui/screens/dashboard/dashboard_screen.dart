@@ -246,9 +246,15 @@ class DashboardScreen extends ConsumerWidget {
                           ],
                           _MiniStat(
                             label: l10n.dashboardMyDeposit,
-                            value: fmt.currency(monthDeposits
-                                .where((d) => d.memberId == actingAs.id)
-                                .fold<int>(0, (a, d) => a + d.amountPaisa)),
+                            // All-time, deliberately: it sits next to Balance,
+                            // which is also cumulative (balances carry forward
+                            // across months). Showing this month's deposits
+                            // beside an all-time balance made the two look
+                            // like they should subtract, and they didn't.
+                            value: fmt.currency(
+                              (balances.value ?? const []).where((b) => b.memberId == actingAs.id).firstOrNull?.totalDeposits ??
+                                  0,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           _MiniStat(
