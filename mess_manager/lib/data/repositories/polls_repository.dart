@@ -121,6 +121,22 @@ class PollsRepository {
     );
   }
 
+  /// Reopens a closed poll and extends its close time — for a mess admin (or
+  /// a `pollsManage` holder) who wants to give members more time to vote.
+  /// Re-closing later (when [newCloseAt] passes) re-applies results via
+  /// [closePoll], which still preserves any manual meal edits made in the
+  /// meantime. [newCloseAt] must be in the future or the poll would just
+  /// re-close on the next app open.
+  Future<void> reopenPoll({required String pollId, required DateTime newCloseAt}) async {
+    await (_db.update(_db.mealPolls)..where((p) => p.id.equals(pollId))).write(
+      MealPollsCompanion(
+        closed: const Value(false),
+        closeAt: Value(newCloseAt.millisecondsSinceEpoch),
+        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+  }
+
   Future<void> castVote({required String pollId, required String memberId, required domain.PollVote value}) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.into(_db.mealPollVotes).insertOnConflictUpdate(

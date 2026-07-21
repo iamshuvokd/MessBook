@@ -69,6 +69,14 @@ class PollDetailScreen extends ConsumerWidget {
                 builder: (_) => CreatePollSheet(groupId: groupId, existing: pollForAppBar),
               ),
             ),
+          // Reopen & extend a CLOSED poll — a mess-admin / pollsManage action
+          // to give members more time to vote.
+          if (canManage && pollForAppBar != null && pollForAppBar.closed)
+            IconButton(
+              icon: const Icon(Icons.lock_open_rounded),
+              tooltip: l10n.pollReopen,
+              onPressed: () => _reopenPoll(context, ref, pollForAppBar),
+            ),
         ],
       ),
       body: SyncRefreshIndicator(
@@ -161,6 +169,69 @@ class PollDetailScreen extends ConsumerWidget {
         PollType.count => l10n.pollVoteCountQuestion,
         PollType.menu => l10n.pollVoteMenuQuestion,
       };
+
+  /// Lets a mess admin pick a new close time and reopen a closed poll, so
+  /// members get more time to vote. The new close time is on today's date
+  /// (bumped to tomorrow if already past), guaranteeing the poll actually
+  /// stays open rather than re-closing on the next app open.
+  Future<void> _reopenPoll(BuildContext context, WidgetRef ref, MealPoll poll) async {
+    final l10n = AppLocalizations.of(context);
+    var pickedTime = TimeOfDay.fromDateTime(DateTime.now().add(const Duration(hours: 2)));
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+          title: Text(l10n.pollReopen),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.pollReopenHint, style: const TextStyle(fontSize: 12.5)),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(l10n.pollCloseAt, style: const TextStyle(fontWeight: FontWeight.w600)),
+                  TextButton(
+                    onPressed: () async {
+                      final picked = await showTimePicker(context: dialogContext, initialTime: pickedTime);
+                      if (picked != null) setState(() => pickedTime = picked);
+                    },
+                    child: Text(pickedTime.format(dialogContext)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.commonCancel)),
+            FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: Text(l10n.pollReopenAction)),
+          ],
+        ),
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    final now = DateTime.now();
+    var newCloseAt = DateTime(now.year, now.month, now.day, pickedTime.hour, pickedTime.minute);
+    if (!newCloseAt.isAfter(now)) newCloseAt = newCloseAt.add(const Duration(days: 1));
+
+    await ref.read(pollsRepositoryProvider).reopenPoll(pollId: poll.id, newCloseAt: newCloseAt);
+
+    final remindAt = newCloseAt.subtract(const Duration(minutes: 30));
+    if (remindAt.isAfter(now)) {
+      await ref.read(notificationServiceProvider).schedulePollCloseReminder(
+            pollId: poll.id,
+            remindAt: remindAt,
+            title: l10n.notifyPollReminderTitle,
+            body: l10n.notifyPollReminderBody,
+          );
+    }
+    triggerBackgroundSync(ref, groupId);
+  }
 }
 
 extension _FirstOrNull<T> on Iterable<T> {

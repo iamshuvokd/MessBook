@@ -2828,6 +2828,24 @@ abstract class AppLocalizations {
   /// **'Open'**
   String get pollOpen;
 
+  /// No description provided for @pollReopen.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen voting'**
+  String get pollReopen;
+
+  /// No description provided for @pollReopenHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Give members more time to vote. The poll reopens and closes again at the new time, re-applying results (manual meal edits are kept).'**
+  String get pollReopenHint;
+
+  /// No description provided for @pollReopenAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Reopen & extend'**
+  String get pollReopenAction;
+
   /// No description provided for @pollVotedCount.
   ///
   /// In en, this message translates to:

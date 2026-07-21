@@ -1502,6 +1502,16 @@ class AppLocalizationsBn extends AppLocalizations {
   String get pollOpen => 'চলমান';
 
   @override
+  String get pollReopen => 'ভোট আবার চালু করুন';
+
+  @override
+  String get pollReopenHint =>
+      'সদস্যদের ভোট দেওয়ার জন্য আরও সময় দিন। পোল আবার চালু হবে এবং নতুন সময়ে বন্ধ হবে, ফলাফল আবার প্রয়োগ হবে (হাতে করা মিল এডিট থাকবে)।';
+
+  @override
+  String get pollReopenAction => 'আবার চালু ও বাড়ান';
+
+  @override
   String pollVotedCount(String voted, String total) {
     return '$voted/$total জন ভোট দিয়েছেন';
   }

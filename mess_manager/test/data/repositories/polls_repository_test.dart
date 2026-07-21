@@ -104,6 +104,33 @@ void main() {
     expect(after.closed, isFalse);
   });
 
+  test('reopenPoll reopens a closed poll and extends its close time', () async {
+    final pollId = await createPastPoll(type: PollType.count);
+    await polls.closePoll(pollId);
+    expect((await polls.watchPoll(pollId).first)!.closed, isTrue);
+
+    final newCloseAt = today.add(const Duration(hours: 3));
+    await polls.reopenPoll(pollId: pollId, newCloseAt: newCloseAt);
+
+    final reopened = await polls.watchPoll(pollId).first;
+    expect(reopened!.closed, isFalse);
+    expect(reopened.closeAt.millisecondsSinceEpoch, newCloseAt.millisecondsSinceEpoch);
+  });
+
+  test('a reopened poll is picked up again by closeDuePolls once its new time passes', () async {
+    final pollId = await createPastPoll(type: PollType.count);
+    await polls.closePoll(pollId);
+
+    // Reopen with a close time already in the past → it should re-close on the
+    // next closeDuePolls sweep (proving reopen fully returns it to the pool).
+    await polls.reopenPoll(pollId: pollId, newCloseAt: today.subtract(const Duration(minutes: 1)));
+    expect((await polls.watchPoll(pollId).first)!.closed, isFalse);
+
+    final closed = await polls.closeDuePolls(groupId);
+    expect(closed, 1);
+    expect((await polls.watchPoll(pollId).first)!.closed, isTrue);
+  });
+
   test('a menu-type poll never touches the meal grid', () async {
     final member = await members.addMember(groupId: groupId, name: 'Alice');
     final pollId = await createPastPoll(type: PollType.menu, nonVoterPolicy: NonVoterPolicy.zero);

@@ -1510,6 +1510,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pollOpen => 'Open';
 
   @override
+  String get pollReopen => 'Reopen voting';
+
+  @override
+  String get pollReopenHint =>
+      'Give members more time to vote. The poll reopens and closes again at the new time, re-applying results (manual meal edits are kept).';
+
+  @override
+  String get pollReopenAction => 'Reopen & extend';
+
+  @override
   String pollVotedCount(String voted, String total) {
     return '$voted/$total voted';
   }
