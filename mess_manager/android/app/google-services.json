@@ -12,7 +12,20 @@
           "package_name": "com.messbook.mess_book"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "24075557821-goh7kj9ajsc8pss8mfdunle6fdgplm52.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.messbook.mess_book",
+            "certificate_hash": "149610019495f73f61e7eb1eedc3ca703e7e391d"
+          }
+        },
+        {
+          "client_id": "24075557821-upefqtd72cgko8ai0c2ub883hgqsv8u9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCc4q7za1yoofi_SYQVv-fvjLHYGsn8K7c"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "24075557821-upefqtd72cgko8ai0c2ub883hgqsv8u9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
