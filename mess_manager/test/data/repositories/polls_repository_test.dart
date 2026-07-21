@@ -70,6 +70,40 @@ void main() {
     );
   }
 
+  test('updatePoll changes the editable fields and bumps updatedAt, keeping date/creator', () async {
+    final pollId = await polls.createPoll(
+      groupId: groupId,
+      date: today,
+      type: PollType.count,
+      title: 'Original',
+      closeAt: today.add(const Duration(hours: 2)),
+      createdByMemberId: creatorId,
+      nonVoterPolicy: NonVoterPolicy.zero,
+    );
+    final before = await polls.watchPoll(pollId).first;
+
+    final newCloseAt = today.add(const Duration(hours: 5));
+    await polls.updatePoll(
+      pollId: pollId,
+      type: PollType.menu,
+      title: 'Edited',
+      options: const ['Rice', 'Khichuri'],
+      closeAt: newCloseAt,
+      nonVoterPolicy: NonVoterPolicy.routine,
+    );
+
+    final after = await polls.watchPoll(pollId).first;
+    expect(after!.type, PollType.menu);
+    expect(after.title, 'Edited');
+    expect(after.options, ['Rice', 'Khichuri']);
+    expect(after.closeAt.millisecondsSinceEpoch, newCloseAt.millisecondsSinceEpoch);
+    expect(after.nonVoterPolicy, NonVoterPolicy.routine);
+    // Preserved:
+    expect(after.date, before!.date);
+    expect(after.createdByMemberId, creatorId);
+    expect(after.closed, isFalse);
+  });
+
   test('a menu-type poll never touches the meal grid', () async {
     final member = await members.addMember(groupId: groupId, name: 'Alice');
     final pollId = await createPastPoll(type: PollType.menu, nonVoterPolicy: NonVoterPolicy.zero);

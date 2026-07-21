@@ -12,6 +12,7 @@ import '../../../domain/models/member_permission.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../widgets/sync_refresh_indicator.dart';
+import 'create_poll_sheet.dart';
 import 'meal_slots_screen.dart' show resolveSlotName;
 
 class PollDetailScreen extends ConsumerWidget {
@@ -37,12 +38,32 @@ class PollDetailScreen extends ConsumerWidget {
     final slots = ref.watch(activeSlotsOfSelectedGroupProvider).value ?? const [];
     final votes = ref.watch(pollVotesProvider(pollId)).value ?? const [];
     final canManage = ref.watch(canProvider(MemberPermission.pollsManage));
+    final canEdit = canManage || ref.watch(canProvider(MemberPermission.pollsCreate));
     final pending = ref.watch(pollPendingMembersProvider(pollId)).value ?? const [];
+
+    // Read the poll from the group list too, so the AppBar (built outside the
+    // StreamBuilder below) can show the edit action only for an open poll.
+    final pollForAppBar =
+        (ref.watch(pollsOfSelectedGroupProvider).value ?? const []).where((p) => p.id == pollId).firstOrNull;
 
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(icon: const Icon(Icons.arrow_back_rounded), onPressed: () => context.pop()),
         title: Text(l10n.pollsTitle),
+        actions: [
+          // Editable only while the poll is still open — a closed poll has
+          // already applied its results to the meal grid.
+          if (canEdit && pollForAppBar != null && !pollForAppBar.closed)
+            IconButton(
+              icon: const Icon(Icons.edit_outlined),
+              tooltip: l10n.commonEdit,
+              onPressed: () => showModalBottomSheet(
+                context: context,
+                isScrollControlled: true,
+                builder: (_) => CreatePollSheet(groupId: groupId, existing: pollForAppBar),
+              ),
+            ),
+        ],
       ),
       body: SyncRefreshIndicator(
         groupId: groupId,

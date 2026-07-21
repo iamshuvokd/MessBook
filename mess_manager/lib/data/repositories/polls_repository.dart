@@ -97,6 +97,30 @@ class PollsRepository {
     return id;
   }
 
+  /// Edits an existing (still-open) poll's settings. The poll's date,
+  /// creator, and closed flag are untouched; only the creator-editable
+  /// fields change. `updatedAt` is bumped so the edit wins the sync
+  /// last-write-wins comparison and propagates to every other device.
+  Future<void> updatePoll({
+    required String pollId,
+    required domain.PollType type,
+    String? title,
+    List<String> options = const [],
+    required DateTime closeAt,
+    NonVoterPolicy? nonVoterPolicy,
+  }) async {
+    await (_db.update(_db.mealPolls)..where((p) => p.id.equals(pollId))).write(
+      MealPollsCompanion(
+        type: Value(type.name),
+        title: Value(title),
+        optionsJson: Value(options.isEmpty ? null : domain.MealPoll.encodeOptions(options)),
+        closeAt: Value(closeAt.millisecondsSinceEpoch),
+        nonVoterPolicy: Value(nonVoterPolicy?.name),
+        updatedAt: Value(DateTime.now().millisecondsSinceEpoch),
+      ),
+    );
+  }
+
   Future<void> castVote({required String pollId, required String memberId, required domain.PollVote value}) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     await _db.into(_db.mealPollVotes).insertOnConflictUpdate(

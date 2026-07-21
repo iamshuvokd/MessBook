@@ -7,21 +7,28 @@ import '../../../domain/models/non_voter_policy.dart';
 import '../../providers/repository_providers.dart';
 
 class CreatePollSheet extends ConsumerStatefulWidget {
-  const CreatePollSheet({super.key, required this.groupId});
+  const CreatePollSheet({super.key, required this.groupId, this.existing});
 
   final String groupId;
+
+  /// When non-null the sheet edits this poll instead of creating a new one —
+  /// fields are pre-filled and Save calls [PollsRepository.updatePoll].
+  final MealPoll? existing;
 
   @override
   ConsumerState<CreatePollSheet> createState() => _CreatePollSheetState();
 }
 
 class _CreatePollSheetState extends ConsumerState<CreatePollSheet> {
-  PollType _type = PollType.slots;
-  final _titleController = TextEditingController();
-  final _optionsController = TextEditingController();
-  TimeOfDay _closeTime = const TimeOfDay(hour: 21, minute: 0);
-  NonVoterPolicy? _policyOverride; // null = use mess default
+  late PollType _type = widget.existing?.type ?? PollType.slots;
+  late final _titleController = TextEditingController(text: widget.existing?.title ?? '');
+  late final _optionsController = TextEditingController(text: widget.existing?.options.join('\n') ?? '');
+  late TimeOfDay _closeTime =
+      widget.existing != null ? TimeOfDay.fromDateTime(widget.existing!.closeAt) : const TimeOfDay(hour: 21, minute: 0);
+  late NonVoterPolicy? _policyOverride = widget.existing?.nonVoterPolicy; // null = use mess default
   bool _saving = false;
+
+  bool get _isEdit => widget.existing != null;
 
   @override
   void dispose() {
@@ -44,27 +51,43 @@ class _CreatePollSheetState extends ConsumerState<CreatePollSheet> {
 
     setState(() => _saving = true);
     final now = DateTime.now();
-    var closeAt = DateTime(now.year, now.month, now.day, _closeTime.hour, _closeTime.minute);
-    if (closeAt.isBefore(now)) closeAt = closeAt.add(const Duration(days: 1));
+    // When editing, the close time applies to the poll's own date; when
+    // creating, to today (bumped to tomorrow if the time already passed).
+    final baseDate = _isEdit ? widget.existing!.date : now;
+    var closeAt = DateTime(baseDate.year, baseDate.month, baseDate.day, _closeTime.hour, _closeTime.minute);
+    if (!_isEdit && closeAt.isBefore(now)) closeAt = closeAt.add(const Duration(days: 1));
 
     final options = _type == PollType.menu
         ? _optionsController.text.split('\n').map((s) => s.trim()).where((s) => s.isNotEmpty).toList()
         : const <String>[];
+    final title = _titleController.text.trim().isEmpty ? null : _titleController.text.trim();
 
-    final actingAs = ref.read(actingAsMemberProvider);
-    final members = ref.read(membersOfSelectedGroupProvider).value ?? const [];
-    final createdBy = actingAs?.id ?? (members.isNotEmpty ? members.first.id : '');
-
-    final pollId = await ref.read(pollsRepositoryProvider).createPoll(
-          groupId: widget.groupId,
-          date: now,
-          type: _type,
-          title: _titleController.text.trim().isEmpty ? null : _titleController.text.trim(),
-          options: options,
-          closeAt: closeAt,
-          createdByMemberId: createdBy,
-          nonVoterPolicy: _policyOverride,
-        );
+    final String pollId;
+    if (_isEdit) {
+      pollId = widget.existing!.id;
+      await ref.read(pollsRepositoryProvider).updatePoll(
+            pollId: pollId,
+            type: _type,
+            title: title,
+            options: options,
+            closeAt: closeAt,
+            nonVoterPolicy: _policyOverride,
+          );
+    } else {
+      final actingAs = ref.read(actingAsMemberProvider);
+      final members = ref.read(membersOfSelectedGroupProvider).value ?? const [];
+      final createdBy = actingAs?.id ?? (members.isNotEmpty ? members.first.id : '');
+      pollId = await ref.read(pollsRepositoryProvider).createPoll(
+            groupId: widget.groupId,
+            date: now,
+            type: _type,
+            title: title,
+            options: options,
+            closeAt: closeAt,
+            createdByMemberId: createdBy,
+            nonVoterPolicy: _policyOverride,
+          );
+    }
 
     final remindAt = closeAt.subtract(const Duration(minutes: 30));
     if (remindAt.isAfter(now)) {
@@ -90,7 +113,7 @@ class _CreatePollSheetState extends ConsumerState<CreatePollSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.pollCreate, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+            Text(_isEdit ? l10n.commonEdit : l10n.pollCreate, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
             const SizedBox(height: 16),
             SegmentedButton<PollType>(
               segments: [
@@ -146,7 +169,7 @@ class _CreatePollSheetState extends ConsumerState<CreatePollSheet> {
             FilledButton(
               onPressed: _saving ? null : _save,
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(50)),
-              child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(l10n.pollCreate),
+              child: _saving ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : Text(_isEdit ? l10n.commonSave : l10n.pollCreate),
             ),
           ],
         ),
