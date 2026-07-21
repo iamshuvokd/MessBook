@@ -16,6 +16,7 @@ class NotificationService {
   static const _chatMessageId = 1004;
   static const _memberJoinedId = 1005;
   static const _pollCreatedId = 1006;
+  static const _lowBalanceId = 1007;
   // Recurring-expense-due ids start at 2000 + dayOfMonth to keep them stable per rule.
   static int recurringDueId(int dayOfMonth) => 2000 + dayOfMonth;
   static int pollReminderId(String pollId) => 3000 + (pollId.hashCode.abs() % 100000);
@@ -176,6 +177,18 @@ class NotificationService {
       body: body,
       notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails('member_joined', 'Mess membership', importance: Importance.defaultImportance),
+      ),
+    );
+  }
+
+  Future<void> showLowBalance({required String title, required String body}) async {
+    await init();
+    await _plugin.show(
+      id: _lowBalanceId,
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails('low_balance', 'Low mess balance', importance: Importance.defaultImportance),
       ),
     );
   }

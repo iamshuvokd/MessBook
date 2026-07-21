@@ -606,6 +606,48 @@ final appOpenTasksProvider = FutureProvider<void>((ref) async {
 
   await notifications.requestPermission();
 
+  // Low-balance warnings. Each device warns about *itself* (the member this
+  // device acts as) and, if that member manages money/meals, about anyone
+  // else who has dropped under the mess threshold — so the manager finds out
+  // without having to go looking.
+  for (final group in groups) {
+    if (group.lowBalanceThresholdPaisa <= 0) continue;
+    final balances = await ref.read(balancesRepositoryProvider).computeBalances(
+          group.id,
+          ledger: group.mealLedgerSeparate ? LedgerPurpose.meal : null,
+        );
+    final low = balances
+        .where((b) => isLowBalance(remainingPaisa: b.net, thresholdPaisa: group.lowBalanceThresholdPaisa))
+        .toList();
+    if (low.isEmpty) continue;
+
+    final selfId = await settings.get('actingAs_${group.id}');
+    final memberRows = await (db.select(db.members)..where((m) => m.groupId.equals(group.id))).get();
+    final self = memberRows.where((m) => m.id == selfId).firstOrNull;
+
+    if (low.any((b) => b.memberId == selfId)) {
+      await notifications.showLowBalance(
+        title: l10n.notifyLowBalanceTitle,
+        body: l10n.notifyLowBalanceOwnBody,
+      );
+    }
+
+    // Manager view: App Admin, or a sub-admin holding money/meal management.
+    final isManager = self != null &&
+        (self.role == 'appAdmin' ||
+            self.permissions.split(',').any((p) => p == 'money.manage' || p == 'meals.manage'));
+    if (isManager) {
+      for (final b in low.where((b) => b.memberId != selfId)) {
+        final name = memberRows.where((m) => m.id == b.memberId).firstOrNull?.name;
+        if (name == null) continue;
+        await notifications.showLowBalance(
+          title: l10n.notifyLowBalanceTitle,
+          body: l10n.notifyLowBalanceAdminBody(name),
+        );
+      }
+    }
+  }
+
   // Poll close reminders, scheduled on EVERY member's device (not just the
   // creator's) from the mess-wide lead time, so everyone gets nudged to vote
   // before a poll closes. 0 minutes means the mess turned reminders off.
