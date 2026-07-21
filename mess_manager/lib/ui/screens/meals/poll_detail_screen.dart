@@ -30,6 +30,12 @@ class PollDetailScreen extends ConsumerWidget {
       }
     });
 
+    // Keep live sync active while watching a poll, so votes cast on other
+    // devices appear here in real time (socket nudge) rather than only on
+    // pull-to-refresh — this is the screen where you actually watch votes
+    // come in.
+    ref.watch(foregroundGroupSyncProvider);
+
     final poll = ref.watch(pollsRepositoryProvider).watchPoll(pollId);
     final locale = ref.watch(localeProvider);
     final banglaDigits = ref.watch(banglaDigitsProvider);
