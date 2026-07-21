@@ -544,6 +544,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expensesNoteHint => 'Note (optional)';
 
   @override
+  String get expenseBlockerAmount => 'Enter an amount';
+
+  @override
+  String get expenseBlockerCategory => 'Pick a category';
+
+  @override
+  String get expenseBlockerPayer => 'Choose who paid';
+
+  @override
+  String get expenseBlockerPayerSum => 'Payer amounts must add up to the total';
+
+  @override
+  String get expenseBlockerSplit => 'Set how to split this';
+
+  @override
+  String get expenseBlockerSplitSum => 'The split must add up to the total';
+
+  @override
   String get expensesSave => 'Save expense';
 
   @override

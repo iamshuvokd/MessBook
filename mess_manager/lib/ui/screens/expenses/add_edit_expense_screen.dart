@@ -20,6 +20,28 @@ import 'split_editor_screen.dart';
 
 const _uuid = Uuid();
 
+/// Why the Save button is currently disabled — so the user is told what's
+/// missing instead of tapping a dead button. Order matters: the first thing
+/// still missing is what we surface.
+enum ExpenseSaveBlocker { none, amount, category, payer, payerSum, split, splitSum }
+
+ExpenseSaveBlocker expenseSaveBlocker({
+  required int amountPaisa,
+  required bool hasCategory,
+  required bool hasPayer,
+  required int payersSumPaisa,
+  // null = the split editor hasn't been configured yet.
+  required int? splitsSumPaisa,
+}) {
+  if (amountPaisa <= 0) return ExpenseSaveBlocker.amount;
+  if (!hasCategory) return ExpenseSaveBlocker.category;
+  if (!hasPayer) return ExpenseSaveBlocker.payer;
+  if (payersSumPaisa != amountPaisa) return ExpenseSaveBlocker.payerSum;
+  if (splitsSumPaisa == null) return ExpenseSaveBlocker.split;
+  if (splitsSumPaisa != amountPaisa) return ExpenseSaveBlocker.splitSum;
+  return ExpenseSaveBlocker.none;
+}
+
 /// Which split a newly-picked category should default to. Bazar/grocery
 /// (meal) categories default to a by-meals split, so each member is charged
 /// meal rate x their own meals — the mess model where everyone's deposit is
@@ -188,13 +210,15 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     });
   }
 
-  bool get _canSave =>
-      _amountPaisa > 0 &&
-      _categoryId != null &&
-      _payerIds.isNotEmpty &&
-      _payersSum == _amountPaisa &&
-      _splits != null &&
-      _splits!.values.fold<int>(0, (a, b) => a + b) == _amountPaisa;
+  ExpenseSaveBlocker get _saveBlocker => expenseSaveBlocker(
+        amountPaisa: _amountPaisa,
+        hasCategory: _categoryId != null,
+        hasPayer: _payerIds.isNotEmpty,
+        payersSumPaisa: _payersSum,
+        splitsSumPaisa: _splits?.values.fold<int>(0, (a, b) => a + b),
+      );
+
+  bool get _canSave => _saveBlocker == ExpenseSaveBlocker.none;
 
   Future<void> _save() async {
     if (!_canSave) return;
@@ -409,13 +433,37 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                 _buildKeypad(),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  child: FilledButton.icon(
-                    onPressed: (_canSave && !_saving) ? _save : null,
-                    icon: _saving
-                        ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                        : const Icon(Icons.check_rounded),
-                    label: Text(l10n.expensesSave),
-                    style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Never leave Save dead without saying why.
+                      if (!_canSave)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            children: [
+                              Icon(Icons.info_outline_rounded,
+                                  size: 15, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  _blockerMessage(l10n, _saveBlocker),
+                                  style: TextStyle(
+                                      fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      FilledButton.icon(
+                        onPressed: (_canSave && !_saving) ? _save : null,
+                        icon: _saving
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            : const Icon(Icons.check_rounded),
+                        label: Text(l10n.expensesSave),
+                        style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -425,6 +473,16 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
       ),
     );
   }
+
+  String _blockerMessage(AppLocalizations l10n, ExpenseSaveBlocker blocker) => switch (blocker) {
+        ExpenseSaveBlocker.amount => l10n.expenseBlockerAmount,
+        ExpenseSaveBlocker.category => l10n.expenseBlockerCategory,
+        ExpenseSaveBlocker.payer => l10n.expenseBlockerPayer,
+        ExpenseSaveBlocker.payerSum => l10n.expenseBlockerPayerSum,
+        ExpenseSaveBlocker.split => l10n.expenseBlockerSplit,
+        ExpenseSaveBlocker.splitSum => l10n.expenseBlockerSplitSum,
+        ExpenseSaveBlocker.none => '',
+      };
 
   String _splitSummaryText(List<Member> members, AppLocalizations l10n) {
     if (_splits == null || _splits!.isEmpty) return l10n.expensesSplitConfigure;

@@ -544,6 +544,25 @@ class AppLocalizationsBn extends AppLocalizations {
   String get expensesNoteHint => 'নোট (ঐচ্ছিক)';
 
   @override
+  String get expenseBlockerAmount => 'পরিমাণ লিখুন';
+
+  @override
+  String get expenseBlockerCategory => 'একটি ক্যাটাগরি বাছুন';
+
+  @override
+  String get expenseBlockerPayer => 'কে টাকা দিয়েছে বাছুন';
+
+  @override
+  String get expenseBlockerPayerSum =>
+      'যারা দিয়েছে তাদের পরিমাণ মোট টাকার সমান হতে হবে';
+
+  @override
+  String get expenseBlockerSplit => 'কীভাবে ভাগ হবে ঠিক করুন';
+
+  @override
+  String get expenseBlockerSplitSum => 'ভাগের যোগফল মোট টাকার সমান হতে হবে';
+
+  @override
   String get expensesSave => 'খরচ সংরক্ষণ করুন';
 
   @override

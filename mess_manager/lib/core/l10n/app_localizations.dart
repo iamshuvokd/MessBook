@@ -1082,6 +1082,42 @@ abstract class AppLocalizations {
   /// **'Note (optional)'**
   String get expensesNoteHint;
 
+  /// No description provided for @expenseBlockerAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount'**
+  String get expenseBlockerAmount;
+
+  /// No description provided for @expenseBlockerCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick a category'**
+  String get expenseBlockerCategory;
+
+  /// No description provided for @expenseBlockerPayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose who paid'**
+  String get expenseBlockerPayer;
+
+  /// No description provided for @expenseBlockerPayerSum.
+  ///
+  /// In en, this message translates to:
+  /// **'Payer amounts must add up to the total'**
+  String get expenseBlockerPayerSum;
+
+  /// No description provided for @expenseBlockerSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Set how to split this'**
+  String get expenseBlockerSplit;
+
+  /// No description provided for @expenseBlockerSplitSum.
+  ///
+  /// In en, this message translates to:
+  /// **'The split must add up to the total'**
+  String get expenseBlockerSplitSum;
+
   /// No description provided for @expensesSave.
   ///
   /// In en, this message translates to:
