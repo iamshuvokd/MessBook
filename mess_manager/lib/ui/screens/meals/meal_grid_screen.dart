@@ -15,6 +15,17 @@ import '../../widgets/app_drawer.dart';
 import '../../widgets/empty_state.dart';
 import '../../widgets/sync_refresh_indicator.dart';
 
+/// The number a meal-sheet day cell shows: the member's combined total for
+/// that day — own meals + guest meals — or `·` when the day has no entry.
+/// Extracted (and testable) so the "cell shows the total, not just own
+/// meals" rule can't silently regress. Matches the footer's Total meals,
+/// which also sums `count + guest`.
+String mealSheetCellLabel(BdFormatter fmt, double count, double guest) {
+  final total = count + guest;
+  if (total <= 0) return '·';
+  return fmt.digits(total.toStringAsFixed(total % 1 == 0 ? 0 : 1));
+}
+
 class MealGridScreen extends ConsumerWidget {
   const MealGridScreen({super.key, required this.groupId});
 
@@ -374,7 +385,9 @@ class _MealCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final hasData = data != null && (data!.count > 0 || data!.guest > 0);
-    final label = hasData ? fmt.digits(data!.count.toStringAsFixed(data!.count % 1 == 0 ? 0 : 1)) : '·';
+    // Show the combined total (own + guest); the guest icon below stays as a
+    // hint that the number already includes guest meals.
+    final label = data == null ? '·' : mealSheetCellLabel(fmt, data!.count, data!.guest);
 
     return InkWell(
       onTap: onTap,
