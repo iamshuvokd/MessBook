@@ -22,6 +22,7 @@ class Group {
     required this.mealEnabled,
     this.mealLedgerSeparate = false,
     this.defaultNonVoterPolicy = NonVoterPolicy.routine,
+    this.pollReminderMinutes = 30,
     required this.archived,
     required this.createdAt,
     required this.updatedAt,
@@ -43,6 +44,10 @@ class Group {
   /// What happens to a poll's non-voters when it closes, unless the poll
   /// overrides it itself.
   final NonVoterPolicy defaultNonVoterPolicy;
+
+  /// Minutes before a poll closes that every member's device reminds them to
+  /// vote. Mess-wide and synced so all members share one policy; 0 = off.
+  final int pollReminderMinutes;
   final bool archived;
   final DateTime createdAt;
   final DateTime updatedAt;
@@ -60,6 +65,7 @@ class Group {
     bool? mealEnabled,
     bool? mealLedgerSeparate,
     NonVoterPolicy? defaultNonVoterPolicy,
+    int? pollReminderMinutes,
     bool? archived,
     String? inviteCode,
   }) {
@@ -72,6 +78,7 @@ class Group {
       mealEnabled: mealEnabled ?? this.mealEnabled,
       mealLedgerSeparate: mealLedgerSeparate ?? this.mealLedgerSeparate,
       defaultNonVoterPolicy: defaultNonVoterPolicy ?? this.defaultNonVoterPolicy,
+      pollReminderMinutes: pollReminderMinutes ?? this.pollReminderMinutes,
       archived: archived ?? this.archived,
       createdAt: createdAt,
       updatedAt: DateTime.now(),

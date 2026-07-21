@@ -24,7 +24,11 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
   bool _mealEnabled = true;
   bool _mealLedgerSeparate = false;
   NonVoterPolicy _defaultNonVoterPolicy = NonVoterPolicy.routine;
+  int _pollReminderMinutes = 30;
   Group? _existing;
+
+  /// Lead-time choices for the mess-wide poll reminder; 0 = off.
+  static const _reminderChoices = [0, 10, 15, 20, 30, 45, 60];
   bool _loading = false;
   bool _saving = false;
 
@@ -48,6 +52,7 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
       _mealEnabled = group.mealEnabled;
       _mealLedgerSeparate = group.mealLedgerSeparate;
       _defaultNonVoterPolicy = group.defaultNonVoterPolicy;
+      _pollReminderMinutes = group.pollReminderMinutes;
       _loading = false;
     });
   }
@@ -74,6 +79,7 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
         mealEnabled: _mealEnabled,
         mealLedgerSeparate: _mealEnabled && _mealLedgerSeparate,
         defaultNonVoterPolicy: _defaultNonVoterPolicy,
+        pollReminderMinutes: _pollReminderMinutes,
       ));
       // Push the change up for an online mess — without this the local edit
       // is overwritten by the server's old value on the next foreground pull
@@ -232,6 +238,29 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
                               DropdownMenuItem(value: p, child: Text(_policyLabel(l10n, p), style: const TextStyle(fontSize: 12.5))),
                           ],
                           onChanged: (v) => setState(() => _defaultNonVoterPolicy = v ?? _defaultNonVoterPolicy),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Card(
+                      child: ListTile(
+                        leading: const Icon(Icons.notifications_active_outlined),
+                        title: Text(l10n.groupPollReminder),
+                        subtitle: Text(l10n.groupPollReminderSub, style: const TextStyle(fontSize: 12)),
+                        trailing: DropdownButton<int>(
+                          value: _reminderChoices.contains(_pollReminderMinutes) ? _pollReminderMinutes : 30,
+                          underline: const SizedBox.shrink(),
+                          items: [
+                            for (final m in _reminderChoices)
+                              DropdownMenuItem(
+                                value: m,
+                                child: Text(
+                                  m == 0 ? l10n.pollReminderOff : l10n.pollReminderBefore('$m'),
+                                  style: const TextStyle(fontSize: 12.5),
+                                ),
+                              ),
+                          ],
+                          onChanged: (v) => setState(() => _pollReminderMinutes = v ?? _pollReminderMinutes),
                         ),
                       ),
                     ),

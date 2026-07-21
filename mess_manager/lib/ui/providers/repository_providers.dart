@@ -556,6 +556,25 @@ final appOpenTasksProvider = FutureProvider<void>((ref) async {
 
   await notifications.requestPermission();
 
+  // Poll close reminders, scheduled on EVERY member's device (not just the
+  // creator's) from the mess-wide lead time, so everyone gets nudged to vote
+  // before a poll closes. 0 minutes means the mess turned reminders off.
+  for (final group in groups) {
+    if (!group.mealEnabled || group.pollReminderMinutes <= 0) continue;
+    final openPolls = (await polls.watchPolls(group.id).first).where((p) => !p.closed);
+    for (final poll in openPolls) {
+      final remindAt = poll.closeAt.subtract(Duration(minutes: group.pollReminderMinutes));
+      if (remindAt.isAfter(DateTime.now())) {
+        await notifications.schedulePollCloseReminder(
+          pollId: poll.id,
+          remindAt: remindAt,
+          title: l10n.notifyPollReminderTitle,
+          body: l10n.notifyPollReminderBody,
+        );
+      }
+    }
+  }
+
   await notifications.scheduleDailyMealReminder(
     hour: 22,
     minute: 0,

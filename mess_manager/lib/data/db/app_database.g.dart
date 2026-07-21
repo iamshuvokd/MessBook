@@ -101,6 +101,17 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         requiredDuringInsert: false,
         defaultValue: const Constant('routine'),
       );
+  static const VerificationMeta _pollReminderMinutesMeta =
+      const VerificationMeta('pollReminderMinutes');
+  @override
+  late final GeneratedColumn<int> pollReminderMinutes = GeneratedColumn<int>(
+    'poll_reminder_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(30),
+  );
   static const VerificationMeta _archivedMeta = const VerificationMeta(
     'archived',
   );
@@ -159,6 +170,7 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
     mealEnabled,
     mealLedgerSeparate,
     defaultNonVoterPolicy,
+    pollReminderMinutes,
     archived,
     createdAt,
     updatedAt,
@@ -240,6 +252,15 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         ),
       );
     }
+    if (data.containsKey('poll_reminder_minutes')) {
+      context.handle(
+        _pollReminderMinutesMeta,
+        pollReminderMinutes.isAcceptableOrUnknown(
+          data['poll_reminder_minutes']!,
+          _pollReminderMinutesMeta,
+        ),
+      );
+    }
     if (data.containsKey('archived')) {
       context.handle(
         _archivedMeta,
@@ -309,6 +330,10 @@ class $GroupsTable extends Groups with TableInfo<$GroupsTable, Group> {
         DriftSqlType.string,
         data['${effectivePrefix}default_non_voter_policy'],
       )!,
+      pollReminderMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}poll_reminder_minutes'],
+      )!,
       archived: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}archived'],
@@ -343,6 +368,7 @@ class Group extends DataClass implements Insertable<Group> {
   final bool mealEnabled;
   final bool mealLedgerSeparate;
   final String defaultNonVoterPolicy;
+  final int pollReminderMinutes;
   final bool archived;
   final int createdAt;
   final int updatedAt;
@@ -356,6 +382,7 @@ class Group extends DataClass implements Insertable<Group> {
     required this.mealEnabled,
     required this.mealLedgerSeparate,
     required this.defaultNonVoterPolicy,
+    required this.pollReminderMinutes,
     required this.archived,
     required this.createdAt,
     required this.updatedAt,
@@ -372,6 +399,7 @@ class Group extends DataClass implements Insertable<Group> {
     map['meal_enabled'] = Variable<bool>(mealEnabled);
     map['meal_ledger_separate'] = Variable<bool>(mealLedgerSeparate);
     map['default_non_voter_policy'] = Variable<String>(defaultNonVoterPolicy);
+    map['poll_reminder_minutes'] = Variable<int>(pollReminderMinutes);
     map['archived'] = Variable<bool>(archived);
     map['created_at'] = Variable<int>(createdAt);
     map['updated_at'] = Variable<int>(updatedAt);
@@ -391,6 +419,7 @@ class Group extends DataClass implements Insertable<Group> {
       mealEnabled: Value(mealEnabled),
       mealLedgerSeparate: Value(mealLedgerSeparate),
       defaultNonVoterPolicy: Value(defaultNonVoterPolicy),
+      pollReminderMinutes: Value(pollReminderMinutes),
       archived: Value(archived),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
@@ -416,6 +445,9 @@ class Group extends DataClass implements Insertable<Group> {
       defaultNonVoterPolicy: serializer.fromJson<String>(
         json['defaultNonVoterPolicy'],
       ),
+      pollReminderMinutes: serializer.fromJson<int>(
+        json['pollReminderMinutes'],
+      ),
       archived: serializer.fromJson<bool>(json['archived']),
       createdAt: serializer.fromJson<int>(json['createdAt']),
       updatedAt: serializer.fromJson<int>(json['updatedAt']),
@@ -434,6 +466,7 @@ class Group extends DataClass implements Insertable<Group> {
       'mealEnabled': serializer.toJson<bool>(mealEnabled),
       'mealLedgerSeparate': serializer.toJson<bool>(mealLedgerSeparate),
       'defaultNonVoterPolicy': serializer.toJson<String>(defaultNonVoterPolicy),
+      'pollReminderMinutes': serializer.toJson<int>(pollReminderMinutes),
       'archived': serializer.toJson<bool>(archived),
       'createdAt': serializer.toJson<int>(createdAt),
       'updatedAt': serializer.toJson<int>(updatedAt),
@@ -450,6 +483,7 @@ class Group extends DataClass implements Insertable<Group> {
     bool? mealEnabled,
     bool? mealLedgerSeparate,
     String? defaultNonVoterPolicy,
+    int? pollReminderMinutes,
     bool? archived,
     int? createdAt,
     int? updatedAt,
@@ -463,6 +497,7 @@ class Group extends DataClass implements Insertable<Group> {
     mealEnabled: mealEnabled ?? this.mealEnabled,
     mealLedgerSeparate: mealLedgerSeparate ?? this.mealLedgerSeparate,
     defaultNonVoterPolicy: defaultNonVoterPolicy ?? this.defaultNonVoterPolicy,
+    pollReminderMinutes: pollReminderMinutes ?? this.pollReminderMinutes,
     archived: archived ?? this.archived,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
@@ -488,6 +523,9 @@ class Group extends DataClass implements Insertable<Group> {
       defaultNonVoterPolicy: data.defaultNonVoterPolicy.present
           ? data.defaultNonVoterPolicy.value
           : this.defaultNonVoterPolicy,
+      pollReminderMinutes: data.pollReminderMinutes.present
+          ? data.pollReminderMinutes.value
+          : this.pollReminderMinutes,
       archived: data.archived.present ? data.archived.value : this.archived,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -508,6 +546,7 @@ class Group extends DataClass implements Insertable<Group> {
           ..write('mealEnabled: $mealEnabled, ')
           ..write('mealLedgerSeparate: $mealLedgerSeparate, ')
           ..write('defaultNonVoterPolicy: $defaultNonVoterPolicy, ')
+          ..write('pollReminderMinutes: $pollReminderMinutes, ')
           ..write('archived: $archived, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -526,6 +565,7 @@ class Group extends DataClass implements Insertable<Group> {
     mealEnabled,
     mealLedgerSeparate,
     defaultNonVoterPolicy,
+    pollReminderMinutes,
     archived,
     createdAt,
     updatedAt,
@@ -543,6 +583,7 @@ class Group extends DataClass implements Insertable<Group> {
           other.mealEnabled == this.mealEnabled &&
           other.mealLedgerSeparate == this.mealLedgerSeparate &&
           other.defaultNonVoterPolicy == this.defaultNonVoterPolicy &&
+          other.pollReminderMinutes == this.pollReminderMinutes &&
           other.archived == this.archived &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
@@ -558,6 +599,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
   final Value<bool> mealEnabled;
   final Value<bool> mealLedgerSeparate;
   final Value<String> defaultNonVoterPolicy;
+  final Value<int> pollReminderMinutes;
   final Value<bool> archived;
   final Value<int> createdAt;
   final Value<int> updatedAt;
@@ -572,6 +614,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.mealEnabled = const Value.absent(),
     this.mealLedgerSeparate = const Value.absent(),
     this.defaultNonVoterPolicy = const Value.absent(),
+    this.pollReminderMinutes = const Value.absent(),
     this.archived = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -587,6 +630,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     this.mealEnabled = const Value.absent(),
     this.mealLedgerSeparate = const Value.absent(),
     this.defaultNonVoterPolicy = const Value.absent(),
+    this.pollReminderMinutes = const Value.absent(),
     this.archived = const Value.absent(),
     required int createdAt,
     required int updatedAt,
@@ -605,6 +649,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Expression<bool>? mealEnabled,
     Expression<bool>? mealLedgerSeparate,
     Expression<String>? defaultNonVoterPolicy,
+    Expression<int>? pollReminderMinutes,
     Expression<bool>? archived,
     Expression<int>? createdAt,
     Expression<int>? updatedAt,
@@ -622,6 +667,8 @@ class GroupsCompanion extends UpdateCompanion<Group> {
         'meal_ledger_separate': mealLedgerSeparate,
       if (defaultNonVoterPolicy != null)
         'default_non_voter_policy': defaultNonVoterPolicy,
+      if (pollReminderMinutes != null)
+        'poll_reminder_minutes': pollReminderMinutes,
       if (archived != null) 'archived': archived,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -639,6 +686,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
     Value<bool>? mealEnabled,
     Value<bool>? mealLedgerSeparate,
     Value<String>? defaultNonVoterPolicy,
+    Value<int>? pollReminderMinutes,
     Value<bool>? archived,
     Value<int>? createdAt,
     Value<int>? updatedAt,
@@ -655,6 +703,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
       mealLedgerSeparate: mealLedgerSeparate ?? this.mealLedgerSeparate,
       defaultNonVoterPolicy:
           defaultNonVoterPolicy ?? this.defaultNonVoterPolicy,
+      pollReminderMinutes: pollReminderMinutes ?? this.pollReminderMinutes,
       archived: archived ?? this.archived,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -692,6 +741,9 @@ class GroupsCompanion extends UpdateCompanion<Group> {
         defaultNonVoterPolicy.value,
       );
     }
+    if (pollReminderMinutes.present) {
+      map['poll_reminder_minutes'] = Variable<int>(pollReminderMinutes.value);
+    }
     if (archived.present) {
       map['archived'] = Variable<bool>(archived.value);
     }
@@ -721,6 +773,7 @@ class GroupsCompanion extends UpdateCompanion<Group> {
           ..write('mealEnabled: $mealEnabled, ')
           ..write('mealLedgerSeparate: $mealLedgerSeparate, ')
           ..write('defaultNonVoterPolicy: $defaultNonVoterPolicy, ')
+          ..write('pollReminderMinutes: $pollReminderMinutes, ')
           ..write('archived: $archived, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -9236,6 +9289,7 @@ typedef $$GroupsTableCreateCompanionBuilder =
       Value<bool> mealEnabled,
       Value<bool> mealLedgerSeparate,
       Value<String> defaultNonVoterPolicy,
+      Value<int> pollReminderMinutes,
       Value<bool> archived,
       required int createdAt,
       required int updatedAt,
@@ -9252,6 +9306,7 @@ typedef $$GroupsTableUpdateCompanionBuilder =
       Value<bool> mealEnabled,
       Value<bool> mealLedgerSeparate,
       Value<String> defaultNonVoterPolicy,
+      Value<int> pollReminderMinutes,
       Value<bool> archived,
       Value<int> createdAt,
       Value<int> updatedAt,
@@ -9531,6 +9586,11 @@ class $$GroupsTableFilterComposer
 
   ColumnFilters<String> get defaultNonVoterPolicy => $composableBuilder(
     column: $table.defaultNonVoterPolicy,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get pollReminderMinutes => $composableBuilder(
+    column: $table.pollReminderMinutes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9904,6 +9964,11 @@ class $$GroupsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get pollReminderMinutes => $composableBuilder(
+    column: $table.pollReminderMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<bool> get archived => $composableBuilder(
     column: $table.archived,
     builder: (column) => ColumnOrderings(column),
@@ -9965,6 +10030,11 @@ class $$GroupsTableAnnotationComposer
 
   GeneratedColumn<String> get defaultNonVoterPolicy => $composableBuilder(
     column: $table.defaultNonVoterPolicy,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get pollReminderMinutes => $composableBuilder(
+    column: $table.pollReminderMinutes,
     builder: (column) => column,
   );
 
@@ -10332,6 +10402,7 @@ class $$GroupsTableTableManager
                 Value<bool> mealEnabled = const Value.absent(),
                 Value<bool> mealLedgerSeparate = const Value.absent(),
                 Value<String> defaultNonVoterPolicy = const Value.absent(),
+                Value<int> pollReminderMinutes = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
                 Value<int> createdAt = const Value.absent(),
                 Value<int> updatedAt = const Value.absent(),
@@ -10346,6 +10417,7 @@ class $$GroupsTableTableManager
                 mealEnabled: mealEnabled,
                 mealLedgerSeparate: mealLedgerSeparate,
                 defaultNonVoterPolicy: defaultNonVoterPolicy,
+                pollReminderMinutes: pollReminderMinutes,
                 archived: archived,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -10362,6 +10434,7 @@ class $$GroupsTableTableManager
                 Value<bool> mealEnabled = const Value.absent(),
                 Value<bool> mealLedgerSeparate = const Value.absent(),
                 Value<String> defaultNonVoterPolicy = const Value.absent(),
+                Value<int> pollReminderMinutes = const Value.absent(),
                 Value<bool> archived = const Value.absent(),
                 required int createdAt,
                 required int updatedAt,
@@ -10376,6 +10449,7 @@ class $$GroupsTableTableManager
                 mealEnabled: mealEnabled,
                 mealLedgerSeparate: mealLedgerSeparate,
                 defaultNonVoterPolicy: defaultNonVoterPolicy,
+                pollReminderMinutes: pollReminderMinutes,
                 archived: archived,
                 createdAt: createdAt,
                 updatedAt: updatedAt,

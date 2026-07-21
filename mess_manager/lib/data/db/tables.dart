@@ -19,6 +19,10 @@ class Groups extends Table {
   // 'pending' | 'zero' | 'repeatYesterday' (customizable by the App Admin,
   // per-poll overridable too — user decision).
   TextColumn get defaultNonVoterPolicy => text().withDefault(const Constant('routine'))();
+  // How many minutes before a poll closes every member's device fires the
+  // "vote now" reminder. Mess-wide (set by the App Admin) and synced, so all
+  // members share one policy rather than each phone guessing; 0 = off.
+  IntColumn get pollReminderMinutes => integer().withDefault(const Constant(30))();
   BoolColumn get archived => boolean().withDefault(const Constant(false))();
   IntColumn get createdAt => integer()();
   IntColumn get updatedAt => integer()();

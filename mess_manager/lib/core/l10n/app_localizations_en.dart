@@ -1336,6 +1336,21 @@ class AppLocalizationsEn extends AppLocalizations {
       'Meal costs get their own balance, settle-up and month close — kept apart from rent & other shared costs';
 
   @override
+  String get groupPollReminder => 'Poll reminder';
+
+  @override
+  String get groupPollReminderSub =>
+      'How long before a poll closes every member is reminded to vote';
+
+  @override
+  String get pollReminderOff => 'Off';
+
+  @override
+  String pollReminderBefore(String minutes) {
+    return '$minutes min before';
+  }
+
+  @override
   String get depositsPurposeQuestion => 'Which balance is this for?';
 
   @override

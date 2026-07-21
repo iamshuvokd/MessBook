@@ -473,6 +473,11 @@
   "ledgerGeneralTab": "ভাড়া ও অন্যান্য",
   "groupMealLedgerSeparate": "মিলের টাকা আলাদা",
   "groupMealLedgerSeparateSub": "মিলের খরচের নিজস্ব ব্যালেন্স, হিসাব মেলানো ও মাস বন্ধ থাকবে — ভাড়া ও অন্যান্য খরচ থেকে সম্পূর্ণ আলাদা",
+  "groupPollReminder": "পোল রিমাইন্ডার",
+  "groupPollReminderSub": "পোল বন্ধ হওয়ার কত আগে সব সদস্যকে ভোট দিতে মনে করিয়ে দেওয়া হবে",
+  "pollReminderOff": "বন্ধ",
+  "pollReminderBefore": "{minutes} মিনিট আগে",
+  "@pollReminderBefore": {"placeholders": {"minutes": {"type": "String"}}},
   "depositsPurposeQuestion": "এই জমা কোন হিসাবের জন্য?",
 
   "pollNonVoterPolicyLabel": "কেউ ভোট না দিলে",

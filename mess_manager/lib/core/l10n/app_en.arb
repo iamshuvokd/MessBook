@@ -474,6 +474,11 @@
   "ledgerGeneralTab": "Rent & others",
   "groupMealLedgerSeparate": "Separate meal money",
   "groupMealLedgerSeparateSub": "Meal costs get their own balance, settle-up and month close — kept apart from rent & other shared costs",
+  "groupPollReminder": "Poll reminder",
+  "groupPollReminderSub": "How long before a poll closes every member is reminded to vote",
+  "pollReminderOff": "Off",
+  "pollReminderBefore": "{minutes} min before",
+  "@pollReminderBefore": {"placeholders": {"minutes": {"type": "String"}}},
   "depositsPurposeQuestion": "Which balance is this for?",
 
   "pollNonVoterPolicyLabel": "If someone doesn't vote",

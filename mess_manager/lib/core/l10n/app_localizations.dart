@@ -2492,6 +2492,30 @@ abstract class AppLocalizations {
   /// **'Meal costs get their own balance, settle-up and month close — kept apart from rent & other shared costs'**
   String get groupMealLedgerSeparateSub;
 
+  /// No description provided for @groupPollReminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Poll reminder'**
+  String get groupPollReminder;
+
+  /// No description provided for @groupPollReminderSub.
+  ///
+  /// In en, this message translates to:
+  /// **'How long before a poll closes every member is reminded to vote'**
+  String get groupPollReminderSub;
+
+  /// No description provided for @pollReminderOff.
+  ///
+  /// In en, this message translates to:
+  /// **'Off'**
+  String get pollReminderOff;
+
+  /// No description provided for @pollReminderBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min before'**
+  String pollReminderBefore(String minutes);
+
   /// No description provided for @depositsPurposeQuestion.
   ///
   /// In en, this message translates to:

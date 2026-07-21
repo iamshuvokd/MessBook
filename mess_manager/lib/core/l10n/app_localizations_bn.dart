@@ -1328,6 +1328,21 @@ class AppLocalizationsBn extends AppLocalizations {
       'মিলের খরচের নিজস্ব ব্যালেন্স, হিসাব মেলানো ও মাস বন্ধ থাকবে — ভাড়া ও অন্যান্য খরচ থেকে সম্পূর্ণ আলাদা';
 
   @override
+  String get groupPollReminder => 'পোল রিমাইন্ডার';
+
+  @override
+  String get groupPollReminderSub =>
+      'পোল বন্ধ হওয়ার কত আগে সব সদস্যকে ভোট দিতে মনে করিয়ে দেওয়া হবে';
+
+  @override
+  String get pollReminderOff => 'বন্ধ';
+
+  @override
+  String pollReminderBefore(String minutes) {
+    return '$minutes মিনিট আগে';
+  }
+
+  @override
   String get depositsPurposeQuestion => 'এই জমা কোন হিসাবের জন্য?';
 
   @override

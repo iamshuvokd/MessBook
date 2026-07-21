@@ -93,8 +93,10 @@ class _CreatePollSheetState extends ConsumerState<CreatePollSheet> {
           );
     }
 
-    final remindAt = closeAt.subtract(const Duration(minutes: 30));
-    if (remindAt.isAfter(now)) {
+    // Mess-wide reminder lead time (0 = reminders off for this mess).
+    final reminderMinutes = ref.read(selectedGroupProvider)?.pollReminderMinutes ?? 30;
+    final remindAt = closeAt.subtract(Duration(minutes: reminderMinutes));
+    if (reminderMinutes > 0 && remindAt.isAfter(now)) {
       await ref.read(notificationServiceProvider).schedulePollCloseReminder(
             pollId: pollId,
             remindAt: remindAt,

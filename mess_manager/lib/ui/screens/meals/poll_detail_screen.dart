@@ -302,8 +302,9 @@ class PollDetailScreen extends ConsumerWidget {
 
     await ref.read(pollsRepositoryProvider).reopenPoll(pollId: poll.id, newCloseAt: newCloseAt);
 
-    final remindAt = newCloseAt.subtract(const Duration(minutes: 30));
-    if (remindAt.isAfter(now)) {
+    final reminderMinutes = ref.read(selectedGroupProvider)?.pollReminderMinutes ?? 30;
+    final remindAt = newCloseAt.subtract(Duration(minutes: reminderMinutes));
+    if (reminderMinutes > 0 && remindAt.isAfter(now)) {
       await ref.read(notificationServiceProvider).schedulePollCloseReminder(
             pollId: poll.id,
             remindAt: remindAt,
