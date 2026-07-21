@@ -242,6 +242,18 @@ final memberBalancesByLedgerProvider =
   return ref.watch(balancesRepositoryProvider).computeBalances(groupId, ledger: ledger);
 });
 
+/// Balances as the meal module should show them: the meal ledger when the
+/// mess keeps meal money separate, otherwise the combined balance — which is
+/// the common case (everyone deposits into one pool and bazar is spent from
+/// it, so "remaining" is deposits minus what they ate).
+final mealLedgerBalancesProvider = FutureProvider.autoDispose<List<MemberBalance>>((ref) async {
+  final separate = ref.watch(selectedGroupProvider)?.mealLedgerSeparate ?? false;
+  if (separate) {
+    return ref.watch(memberBalancesByLedgerProvider(LedgerPurpose.meal).future);
+  }
+  return ref.watch(memberBalancesProvider.future);
+});
+
 final simplifiedDebtsByLedgerProvider =
     FutureProvider.autoDispose.family<List<DebtTransaction>, LedgerPurpose>((ref, ledger) async {
   final balances = await ref.watch(memberBalancesByLedgerProvider(ledger).future);

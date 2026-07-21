@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/bd_formatter.dart';
+import '../../../domain/engines/balance_engine.dart';
 import '../../providers/app_providers.dart';
 import '../../providers/repository_providers.dart';
 import '../../widgets/sync_refresh_indicator.dart';
@@ -71,6 +72,49 @@ class MemberMealDetailScreen extends ConsumerWidget {
               _StatCard(label: l10n.mealsMemberBill, value: fmt.currency(bill), highlight: true),
             ],
           ),
+          const SizedBox(height: 10),
+          // Money view: what they put in, what their meals cost, what's left.
+          Builder(builder: (_) {
+            final balances = ref.watch(mealLedgerBalancesProvider).value ?? const <MemberBalance>[];
+            final mine = balances.where((b) => b.memberId == memberId);
+            if (mine.isEmpty) return const SizedBox.shrink();
+            final balance = mine.first;
+            final threshold = ref.watch(selectedGroupProvider)?.lowBalanceThresholdPaisa ?? 0;
+            final low = isLowBalance(remainingPaisa: balance.net, thresholdPaisa: threshold);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _StatCard(label: l10n.mealBalanceDeposited, value: fmt.currency(balance.totalDeposits)),
+                    const SizedBox(width: 10),
+                    _StatCard(label: l10n.mealBalanceSpent, value: fmt.currency(balance.totalShare)),
+                    const SizedBox(width: 10),
+                    _StatCard(label: l10n.mealBalanceRemaining, value: fmt.currency(balance.net), highlight: !low),
+                  ],
+                ),
+                if (low) ...[
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.errorContainer.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(AppRadius.md),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded, size: 18),
+                        const SizedBox(width: 8),
+                        Text('${l10n.mealBalanceLow} · ${fmt.currency(threshold)}',
+                            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            );
+          }),
           const SizedBox(height: 20),
           Text(l10n.mealsDailyEntries, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
           const SizedBox(height: 8),

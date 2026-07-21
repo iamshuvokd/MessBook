@@ -69,3 +69,10 @@ class BalanceEngine {
     ];
   }
 }
+
+/// Whether a member's remaining balance has fallen below the mess's warning
+/// amount. A threshold of 0 means the mess never set one, so nobody is ever
+/// flagged. Pure + testable so the low-balance rule can't drift between the
+/// warning badge, the notification, and the auto meal-off check.
+bool isLowBalance({required int remainingPaisa, required int thresholdPaisa}) =>
+    thresholdPaisa > 0 && remainingPaisa < thresholdPaisa;

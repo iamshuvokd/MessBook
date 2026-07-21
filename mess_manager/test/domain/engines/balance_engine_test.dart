@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mess_manager/domain/engines/balance_engine.dart';
 
 void main() {
+  _lowBalanceTests();
+
   group('BalanceEngine.compute', () {
     test('equal three-way split with no deposits/settlements sums to zero', () {
       // Rahim pays 3000 for an expense split equally among 3 members.
@@ -68,6 +70,27 @@ void main() {
       final byId = {for (final b in balances) b.memberId: b};
       expect(byId['a']!.net, 0); // -500 share + 500 settlement paid
       expect(byId['b']!.net, 0); // +500 paid - 500 settlement received
+    });
+  });
+}
+
+void _lowBalanceTests() {
+  group('isLowBalance (mess warning threshold)', () {
+    test('flags a member whose remaining balance is under the threshold', () {
+      expect(isLowBalance(remainingPaisa: 5000, thresholdPaisa: 20000), isTrue);
+    });
+
+    test('does not flag a member at or above the threshold', () {
+      expect(isLowBalance(remainingPaisa: 20000, thresholdPaisa: 20000), isFalse);
+      expect(isLowBalance(remainingPaisa: 30000, thresholdPaisa: 20000), isFalse);
+    });
+
+    test('a negative balance (overspent) is always low', () {
+      expect(isLowBalance(remainingPaisa: -5000, thresholdPaisa: 20000), isTrue);
+    });
+
+    test('threshold 0 means the mess never set one, so nobody is flagged', () {
+      expect(isLowBalance(remainingPaisa: -99999, thresholdPaisa: 0), isFalse);
     });
   });
 }
