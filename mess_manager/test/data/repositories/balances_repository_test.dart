@@ -131,6 +131,47 @@ void main() {
     expect(meal[bobId]! + general[bobId]!, combined[bobId]);
   });
 
+  test('a remaining balance carries forward across months (balances are cumulative)', () async {
+    final lastMonth = DateTime(2026, 6, 10);
+    final thisMonth = DateTime(2026, 7, 10);
+
+    // Alice deposits ৳500 last month.
+    await deposits.addDeposit(groupId: groupId, memberId: aliceId, amountPaisa: 50000, date: lastMonth);
+    // Last month she eats ৳200 worth.
+    await expenses.createExpense(
+      groupId: groupId,
+      amountPaisa: 20000,
+      date: lastMonth,
+      categoryId: mealCategoryId,
+      payers: [ExpensePayerEntry(memberId: bobId, amountPaisa: 20000)],
+      splits: [ExpenseSplitEntry(memberId: aliceId, amountPaisa: 20000)],
+      splitType: SplitType.meal,
+    );
+    // End of last month she should be left with ৳300.
+    expect(
+      (await balances.computeBalances(groupId)).firstWhere((b) => b.memberId == aliceId).net,
+      30000,
+    );
+
+    // This month she eats another ৳100 — with no new deposit.
+    await expenses.createExpense(
+      groupId: groupId,
+      amountPaisa: 10000,
+      date: thisMonth,
+      categoryId: mealCategoryId,
+      payers: [ExpensePayerEntry(memberId: bobId, amountPaisa: 10000)],
+      splits: [ExpenseSplitEntry(memberId: aliceId, amountPaisa: 10000)],
+      splitType: SplitType.meal,
+    );
+
+    // ৳200 left — last month's ৳300 carried forward and was drawn down,
+    // rather than the month resetting her balance.
+    expect(
+      (await balances.computeBalances(groupId)).firstWhere((b) => b.memberId == aliceId).net,
+      20000,
+    );
+  });
+
   test('an inactive (deactivated) member is excluded from balances entirely', () async {
     await deposits.addDeposit(groupId: groupId, memberId: bobId, amountPaisa: 1000);
     await members.deactivateMember(bobId);
