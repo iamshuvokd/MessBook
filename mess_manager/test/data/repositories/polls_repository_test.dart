@@ -70,6 +70,19 @@ void main() {
     );
   }
 
+  test('watchPolls lists the most recently created poll first for the same date', () async {
+    final first = await polls.createPoll(
+        groupId: groupId, date: today, type: PollType.count, closeAt: today.add(const Duration(hours: 1)), createdByMemberId: creatorId);
+    // Ensure a strictly later updatedAt for the second poll.
+    await Future<void>.delayed(const Duration(milliseconds: 5));
+    final second = await polls.createPoll(
+        groupId: groupId, date: today, type: PollType.count, closeAt: today.add(const Duration(hours: 2)), createdByMemberId: creatorId);
+
+    final list = await polls.watchPolls(groupId).first;
+    expect(list.first.id, second, reason: 'the newest poll for the same date must appear first');
+    expect(list[1].id, first);
+  });
+
   test('updatePoll changes the editable fields and bumps updatedAt, keeping date/creator', () async {
     final pollId = await polls.createPoll(
       groupId: groupId,

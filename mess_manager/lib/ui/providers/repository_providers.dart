@@ -351,6 +351,17 @@ class SelectedMonthController extends Notifier<DateTime> {
 
 final selectedMonthProvider = NotifierProvider<SelectedMonthController, DateTime>(SelectedMonthController.new);
 
+/// Meals recorded for the actual current day (independent of which month the
+/// grid is showing) — backs the meal manager's "today's total meals" summary.
+final todaysMealsProvider = StreamProvider.autoDispose<List<Meal>>((ref) {
+  final groupId = ref.watch(selectedGroupIdProvider);
+  if (groupId == null) return const Stream.empty();
+  final now = DateTime.now();
+  final start = DateTime(now.year, now.month, now.day);
+  final end = start.add(const Duration(days: 1));
+  return ref.watch(mealsRepositoryProvider).watchMealsInRange(groupId, start, end);
+});
+
 final mealsOfSelectedMonthProvider = StreamProvider.autoDispose<List<Meal>>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider);
   final month = ref.watch(selectedMonthProvider);

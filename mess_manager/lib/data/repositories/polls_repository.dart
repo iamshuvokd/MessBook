@@ -52,7 +52,11 @@ class PollsRepository {
   Stream<List<domain.MealPoll>> watchPolls(String groupId) {
     final query = _db.select(_db.mealPolls)
       ..where((p) => p.groupId.equals(groupId))
-      ..orderBy([(p) => OrderingTerm.desc(p.date)]);
+      // Newest first: primarily by the meal date, then by updatedAt so that
+      // among polls for the same date the most recently created/edited one
+      // sits on top (a just-created poll appears first, not buried under
+      // older same-date polls in insertion order).
+      ..orderBy([(p) => OrderingTerm.desc(p.date), (p) => OrderingTerm.desc(p.updatedAt)]);
     return query.watch().map((rows) => rows.map(_pollToDomain).toList());
   }
 

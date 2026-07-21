@@ -6,6 +6,7 @@ import '../../../core/l10n/app_localizations.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/bd_formatter.dart';
 import '../../../domain/models/ledger_purpose.dart';
+import '../../../domain/models/meal.dart';
 import '../../../domain/models/member.dart';
 import '../../../domain/models/member_permission.dart';
 import '../../providers/app_providers.dart';
@@ -24,6 +25,21 @@ String mealSheetCellLabel(BdFormatter fmt, double count, double guest) {
   final total = count + guest;
   if (total <= 0) return '·';
   return fmt.digits(total.toStringAsFixed(total % 1 == 0 ? 0 : 1));
+}
+
+/// A day's meal summary for the manager: the combined total meals (own +
+/// guest across all members), the guest portion, and how many members ate.
+/// Pure + testable so the manager's "today's total" can't quietly drift.
+({double total, double guests, int eaters}) mealDaySummary(List<Meal> meals) {
+  var total = 0.0;
+  var guests = 0.0;
+  var eaters = 0;
+  for (final m in meals) {
+    total += m.total;
+    guests += m.guestCount;
+    if (m.count > 0 || m.guestCount > 0) eaters++;
+  }
+  return (total: total, guests: guests, eaters: eaters);
 }
 
 class MealGridScreen extends ConsumerWidget {
@@ -52,6 +68,7 @@ class MealGridScreen extends ConsumerWidget {
     final month = ref.watch(selectedMonthProvider);
     final members = ref.watch(membersOfSelectedGroupProvider).value ?? const <Member>[];
     final meals = ref.watch(mealsOfSelectedMonthProvider).value ?? const [];
+    final todaySummary = mealDaySummary(ref.watch(todaysMealsProvider).value ?? const []);
     final rate = ref.watch(mealRateProvider);
     final ledgerSeparate = ref.watch(selectedGroupProvider)?.mealLedgerSeparate ?? false;
     final monthClosed = ledgerSeparate
@@ -100,6 +117,41 @@ class MealGridScreen extends ConsumerWidget {
               groupId: groupId,
               child: Column(
               children: [
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.fromLTRB(16, 12, 16, 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: AppColors.heroGradient,
+                    borderRadius: BorderRadius.circular(AppRadius.lg),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.today_rounded, color: Colors.white, size: 22),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(l10n.mealsTodayTitle, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700)),
+                            Text(
+                              l10n.mealsTodaySummary(
+                                fmt.number(todaySummary.total, decimals: todaySummary.total % 1 == 0 ? 0 : 1),
+                                fmt.number(todaySummary.eaters),
+                              ),
+                              style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800),
+                            ),
+                          ],
+                        ),
+                      ),
+                      if (todaySummary.guests > 0)
+                        Text(
+                          l10n.mealsTodayGuests(fmt.number(todaySummary.guests, decimals: todaySummary.guests % 1 == 0 ? 0 : 1)),
+                          style: const TextStyle(color: Colors.white70, fontSize: 11),
+                        ),
+                    ],
+                  ),
+                ),
                 if (monthClosed)
                   Container(
                     width: double.infinity,

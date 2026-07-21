@@ -1478,6 +1478,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get pollForDateLabel => 'For date';
 
   @override
+  String get mealsTodayTitle => 'Today\'s meals';
+
+  @override
+  String mealsTodaySummary(String total, String eaters) {
+    return '$total total · $eaters eating';
+  }
+
+  @override
+  String mealsTodayGuests(String guests) {
+    return 'incl. $guests guest';
+  }
+
+  @override
   String get pollNonVoterOverride => 'Non-voter rule for this poll';
 
   @override

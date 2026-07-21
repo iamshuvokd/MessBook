@@ -2768,6 +2768,24 @@ abstract class AppLocalizations {
   /// **'For date'**
   String get pollForDateLabel;
 
+  /// No description provided for @mealsTodayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s meals'**
+  String get mealsTodayTitle;
+
+  /// No description provided for @mealsTodaySummary.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} total · {eaters} eating'**
+  String mealsTodaySummary(String total, String eaters);
+
+  /// No description provided for @mealsTodayGuests.
+  ///
+  /// In en, this message translates to:
+  /// **'incl. {guests} guest'**
+  String mealsTodayGuests(String guests);
+
   /// No description provided for @pollNonVoterOverride.
   ///
   /// In en, this message translates to:

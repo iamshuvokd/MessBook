@@ -1470,6 +1470,19 @@ class AppLocalizationsBn extends AppLocalizations {
   String get pollForDateLabel => 'যে তারিখের জন্য';
 
   @override
+  String get mealsTodayTitle => 'আজকের মিল';
+
+  @override
+  String mealsTodaySummary(String total, String eaters) {
+    return 'মোট $total · $eaters জন খাচ্ছেন';
+  }
+
+  @override
+  String mealsTodayGuests(String guests) {
+    return '$guests জন গেস্টসহ';
+  }
+
+  @override
   String get pollNonVoterOverride => 'এই পোলের জন্য নন-ভোটার নিয়ম';
 
   @override
