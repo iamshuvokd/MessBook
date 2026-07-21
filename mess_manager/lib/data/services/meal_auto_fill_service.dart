@@ -15,7 +15,10 @@ class MealAutoFillService {
   final MealRoutinesRepository _routines;
   final MealsRepository _meals;
 
-  Future<int> fillToday(String groupId, {DateTime? today}) async {
+  /// [skipMemberIds] are members the mess has auto-paused (balance below the
+  /// low-balance threshold with auto meal-off on). They're skipped entirely
+  /// here — the manager can still add a meal for them by hand.
+  Future<int> fillToday(String groupId, {DateTime? today, Set<String> skipMemberIds = const {}}) async {
     final day = today ?? DateTime.now();
     final activeMembers = await _members.watchMembers(groupId, activeOnly: true).first;
     final activeSlots = await _slots.activeSlots(groupId);
@@ -23,6 +26,7 @@ class MealAutoFillService {
 
     var filled = 0;
     for (final member in activeMembers) {
+      if (skipMemberIds.contains(member.id)) continue;
       final existing = await _meals.getMealRow(groupId, member.id, day);
       if (existing != null) continue;
 

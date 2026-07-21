@@ -242,6 +242,29 @@ final memberBalancesByLedgerProvider =
   return ref.watch(balancesRepositoryProvider).computeBalances(groupId, ledger: ledger);
 });
 
+/// Members the mess has auto-paused: balance under the low-balance threshold
+/// while `autoMealOffBelowThreshold` is on. They stop getting meals added
+/// automatically (routine auto-fill, poll non-voter defaults) until they top
+/// up; a manager can still add a meal for them by hand. Returns an empty set
+/// whenever the mess hasn't enabled the feature, so it costs nothing then.
+Future<Set<String>> autoPausedMemberIds(
+  Ref ref, {
+  required String groupId,
+  required bool autoMealOff,
+  required int thresholdPaisa,
+  required bool mealLedgerSeparate,
+}) async {
+  if (!autoMealOff || thresholdPaisa <= 0) return const {};
+  final balances = await ref.read(balancesRepositoryProvider).computeBalances(
+        groupId,
+        ledger: mealLedgerSeparate ? LedgerPurpose.meal : null,
+      );
+  return {
+    for (final b in balances)
+      if (isLowBalance(remainingPaisa: b.net, thresholdPaisa: thresholdPaisa)) b.memberId,
+  };
+}
+
 /// Balances as the meal module should show them: the meal ledger when the
 /// mess keeps meal money separate, otherwise the combined balance — which is
 /// the common case (everyone deposits into one pool and bazar is spent from
@@ -569,8 +592,15 @@ final appOpenTasksProvider = FutureProvider<void>((ref) async {
   for (final group in groups) {
     await recurringRepo.generateDueInstances(group.id);
     if (group.mealEnabled) {
-      await polls.closeDuePolls(group.id);
-      await autoFill.fillToday(group.id);
+      final paused = await autoPausedMemberIds(
+        ref,
+        groupId: group.id,
+        autoMealOff: group.autoMealOffBelowThreshold,
+        thresholdPaisa: group.lowBalanceThresholdPaisa,
+        mealLedgerSeparate: group.mealLedgerSeparate,
+      );
+      await polls.closeDuePolls(group.id, skipAutoMemberIds: paused);
+      await autoFill.fillToday(group.id, skipMemberIds: paused);
     }
   }
 

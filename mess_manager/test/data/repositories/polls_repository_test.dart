@@ -187,6 +187,29 @@ void main() {
     expect((await meals.getMealRow(groupId, member.id, today))!.count, 3);
   });
 
+  test('an auto-paused member gets no meal from the non-voter policy', () async {
+    final member = await members.addMember(groupId: groupId, name: 'Alice');
+    final pollId = await createPastPoll(type: PollType.count, nonVoterPolicy: NonVoterPolicy.repeatYesterday);
+    await meals.setMeal(groupId: groupId, memberId: member.id, date: yesterday, count: 2, guestCount: 0);
+
+    await polls.closePoll(pollId, skipAutoMemberIds: {member.id});
+
+    expect(await meals.getMealRow(groupId, member.id, today), isNull,
+        reason: 'a low-balance member should not be auto-given meals');
+  });
+
+  test('an auto-paused member who DID vote still gets their chosen meal', () async {
+    final member = await members.addMember(groupId: groupId, name: 'Alice');
+    final pollId = await createPastPoll(type: PollType.count);
+    await polls.castVote(
+        pollId: pollId, memberId: member.id, value: PollVote(pollId: pollId, memberId: member.id, count: 2, votedAt: today));
+
+    await polls.closePoll(pollId, skipAutoMemberIds: {member.id});
+
+    final row = await meals.getMealRow(groupId, member.id, today);
+    expect(row!.count, 2, reason: 'an explicit vote is the member choosing to eat; only AUTO adds are paused');
+  });
+
   test('a menu-type poll never touches the meal grid', () async {
     final member = await members.addMember(groupId: groupId, name: 'Alice');
     final pollId = await createPastPoll(type: PollType.menu, nonVoterPolicy: NonVoterPolicy.zero);

@@ -168,18 +168,22 @@ class PollsRepository {
   /// Closes every poll past its close time across [groupId], applying
   /// results to the meal grid. Safe to call repeatedly (idempotent — a
   /// closed poll is skipped).
-  Future<int> closeDuePolls(String groupId) async {
+  Future<int> closeDuePolls(String groupId, {Set<String> skipAutoMemberIds = const {}}) async {
     final now = DateTime.now().millisecondsSinceEpoch;
     final due = await (_db.select(_db.mealPolls)
           ..where((p) => p.groupId.equals(groupId) & p.closed.equals(false) & p.closeAt.isSmallerOrEqualValue(now)))
         .get();
     for (final poll in due) {
-      await closePoll(poll.id);
+      await closePoll(poll.id, skipAutoMemberIds: skipAutoMemberIds);
     }
     return due.length;
   }
 
-  Future<void> closePoll(String pollId) async {
+  /// [skipAutoMemberIds] are members auto-paused for a low balance: the
+  /// non-voter policy is NOT applied to them (no meals auto-added). An
+  /// explicit vote still counts — they chose to eat, and the manager can
+  /// sort the money out separately.
+  Future<void> closePoll(String pollId, {Set<String> skipAutoMemberIds = const {}}) async {
     final pollRow = await (_db.select(_db.mealPolls)..where((p) => p.id.equals(pollId))).getSingleOrNull();
     if (pollRow == null || pollRow.closed) return;
 
@@ -220,6 +224,8 @@ class PollsRepository {
 
       // Non-voter: respect a manual edit already sitting there (no
       // slotsJson but a positive count); otherwise apply the policy.
+      if (skipAutoMemberIds.contains(member.id)) continue;
+
       final existing = await _meals.getMealRow(pollRow.groupId, member.id, pollDate);
       final looksManual = existing != null && existing.slotsJson == null && existing.count > 0;
       if (looksManual) continue;

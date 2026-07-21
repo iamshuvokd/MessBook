@@ -96,6 +96,20 @@ void main() {
     expect(await meals.getMealRow(groupId, member.id, today), isNull);
   });
 
+  test('an auto-paused member (low balance) is skipped entirely', () async {
+    final alice = await members.addMember(groupId: groupId, name: 'Alice');
+    final bob = await members.addMember(groupId: groupId, name: 'Bob');
+    await routines.setRoutine(memberId: alice.id, slotId: breakfastSlotId, enabled: true);
+    await routines.setRoutine(memberId: bob.id, slotId: breakfastSlotId, enabled: true);
+
+    // Alice is under the mess's low-balance threshold, so she's paused.
+    final filled = await autoFill.fillToday(groupId, today: today, skipMemberIds: {alice.id});
+
+    expect(filled, 1, reason: 'only Bob should be auto-filled');
+    expect(await meals.getMealRow(groupId, alice.id, today), isNull);
+    expect(await meals.getMealRow(groupId, bob.id, today), isNotNull);
+  });
+
   test('fills multiple members independently and returns the correct count', () async {
     final alice = await members.addMember(groupId: groupId, name: 'Alice');
     final bob = await members.addMember(groupId: groupId, name: 'Bob');
