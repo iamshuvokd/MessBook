@@ -298,15 +298,35 @@ final pollsOfSelectedGroupProvider = StreamProvider.autoDispose<List<MealPoll>>(
   return ref.watch(pollsRepositoryProvider).watchPolls(groupId);
 });
 
-/// Closes any past-due polls for the selected group when a meal screen
-/// mounts, so a poll's results reach the meal grid without waiting for the
-/// next cold app-open (the only other place `closeDuePolls` runs).
-/// Idempotent — an already-closed poll is skipped, and it depends only on
-/// the stable group id so it runs once per screen mount, not on every write.
-final autoCloseDuePollsProvider = FutureProvider.autoDispose<void>((ref) async {
+/// Keeps past-due polls closing while a meal/poll screen is open. Sweeps
+/// immediately on mount and then on a short timer — without the timer a poll
+/// sitting open when its close time passes never closes until the app is
+/// restarted or the grid re-entered, which is exactly the "I set a closing
+/// time but nothing happened" symptom. Idempotent (an already-closed poll is
+/// skipped), and depends only on the stable group id so the sweep itself
+/// can't retrigger it. Syncs when it actually closes something so other
+/// members see the applied results.
+final autoCloseDuePollsProvider = Provider.autoDispose<void>((ref) {
   final groupId = ref.watch(selectedGroupIdProvider);
   if (groupId == null) return;
-  await ref.read(pollsRepositoryProvider).closeDuePolls(groupId);
+
+  Future<void> sweep() async {
+    try {
+      final closed = await ref.read(pollsRepositoryProvider).closeDuePolls(groupId);
+      if (closed > 0) {
+        final groups = ref.read(activeGroupsProvider).value ?? const [];
+        if (groups.any((g) => g.id == groupId && g.isOnline)) {
+          unawaited(ref.read(syncServiceProvider).syncGroup(groupId).catchError((_) {}));
+        }
+      }
+    } catch (_) {
+      // Best-effort background housekeeping; never surfaces to the user.
+    }
+  }
+
+  sweep();
+  final timer = Timer.periodic(const Duration(seconds: 30), (_) => sweep());
+  ref.onDispose(timer.cancel);
 });
 
 /// Today's open poll for the selected group, if any.

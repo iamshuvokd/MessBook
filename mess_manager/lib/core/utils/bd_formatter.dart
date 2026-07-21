@@ -65,4 +65,16 @@ class BdFormatter {
     }
     return intl.DateFormat('d MMM', 'en_US').format(date);
   }
+
+  /// Clock time only, 12-hour with am/pm — e.g. `9:00 PM` / `৯:০০ PM`.
+  String time(DateTime date) {
+    final hour12 = date.hour % 12 == 0 ? 12 : date.hour % 12;
+    final minute = date.minute.toString().padLeft(2, '0');
+    final suffix = date.hour < 12 ? 'AM' : 'PM';
+    return '${digits(hour12.toString())}:${digits(minute)} $suffix';
+  }
+
+  /// Date + clock time — used where the exact moment matters (a poll's
+  /// closing time, which members need to see to know when to vote by).
+  String dayTime(DateTime date) => '${day(date)}, ${time(date)}';
 }

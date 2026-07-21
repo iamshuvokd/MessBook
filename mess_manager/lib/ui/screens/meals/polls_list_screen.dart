@@ -28,6 +28,7 @@ class PollsListScreen extends ConsumerWidget {
     });
 
     ref.watch(foregroundGroupSyncProvider); // near-live: re-sync while open
+    ref.watch(autoCloseDuePollsProvider); // close polls the moment their time passes
     final polls = ref.watch(pollsOfSelectedGroupProvider);
     final locale = ref.watch(localeProvider);
     final banglaDigits = ref.watch(banglaDigitsProvider);
@@ -103,7 +104,10 @@ class _PollTile extends ConsumerWidget {
         ),
         title: Text(poll.title?.isNotEmpty == true ? poll.title! : _typeLabel(), style: const TextStyle(fontWeight: FontWeight.w700)),
         subtitle: Text(
-          '${fmt.day(poll.date)} · ${l10n.pollVotedCount(fmt.number(votes.length), fmt.number(members.length))}',
+          // Members need to see WHEN an open poll closes, not just its date.
+          poll.closed
+              ? '${fmt.day(poll.date)} · ${l10n.pollVotedCount(fmt.number(votes.length), fmt.number(members.length))}'
+              : '${fmt.day(poll.date)} · ${l10n.pollCloseAt} ${fmt.time(poll.closeAt)} · ${l10n.pollVotedCount(fmt.number(votes.length), fmt.number(members.length))}',
           style: const TextStyle(fontSize: 12),
         ),
         trailing: Chip(

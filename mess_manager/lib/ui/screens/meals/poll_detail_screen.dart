@@ -35,6 +35,7 @@ class PollDetailScreen extends ConsumerWidget {
     // pull-to-refresh — this is the screen where you actually watch votes
     // come in.
     ref.watch(foregroundGroupSyncProvider);
+    ref.watch(autoCloseDuePollsProvider); // close this poll the moment its time passes
 
     final poll = ref.watch(pollsRepositoryProvider).watchPoll(pollId);
     final locale = ref.watch(localeProvider);
@@ -147,7 +148,7 @@ class PollDetailScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      '${l10n.pollCloseAt}: ${fmt.day(p.closeAt)}  ·  ${l10n.pollVotedCount(fmt.number(votes.length), fmt.number(members.length))}',
+                      '${l10n.pollCloseAt}: ${fmt.dayTime(p.closeAt)}  ·  ${l10n.pollVotedCount(fmt.number(votes.length), fmt.number(members.length))}',
                       style: const TextStyle(color: Colors.white70, fontSize: 12),
                     ),
                     if (createdBy.isNotEmpty)
