@@ -20,6 +20,13 @@ import 'split_editor_screen.dart';
 
 const _uuid = Uuid();
 
+/// Which split a newly-picked category should default to. Bazar/grocery
+/// (meal) categories default to a by-meals split, so each member is charged
+/// meal rate x their own meals — the mess model where everyone's deposit is
+/// drawn down by what they actually ate. Rent/WiFi and friends stay equal.
+SplitType defaultSplitForCategory({required bool isMealCategory}) =>
+    isMealCategory ? SplitType.meal : SplitType.equal;
+
 class AddEditExpenseScreen extends ConsumerStatefulWidget {
   const AddEditExpenseScreen({super.key, required this.groupId, this.expenseId});
 
@@ -39,6 +46,9 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   final Set<String> _payerIds = {};
   final Map<String, TextEditingController> _payerAmountControllers = {};
   SplitType _splitType = SplitType.equal;
+  // Once the user picks a split themselves (or we loaded an existing
+  // expense), stop re-defaulting it when the category changes.
+  bool _splitTypeChosen = false;
   Map<String, int>? _splits;
   String? _receiptPath;
   bool _loading = false;
@@ -69,6 +79,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
         _payerAmountControllers[p.memberId] = TextEditingController(text: (p.amountPaisa / 100).toStringAsFixed(2));
       }
       _splitType = draft.splitType;
+      _splitTypeChosen = true;
       _splits = {for (final s in draft.splits) s.memberId: s.amountPaisa};
       _receiptPath = draft.expense.receiptPath;
       _loading = false;
@@ -173,6 +184,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     setState(() {
       _splitType = result.splitType;
       _splits = result.splits;
+      _splitTypeChosen = true;
     });
   }
 
@@ -334,7 +346,12 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                                 label: Text(resolveCategoryName(l10n, c.defaultKey, c.name)),
                                 avatar: Icon(lookupIcon(c.icon), size: 16),
                                 selected: _categoryId == c.id,
-                                onSelected: (_) => setState(() => _categoryId = c.id),
+                                onSelected: (_) => setState(() {
+                                  _categoryId = c.id;
+                                  if (!_splitTypeChosen) {
+                                    _splitType = defaultSplitForCategory(isMealCategory: c.isMealCategory);
+                                  }
+                                }),
                               ),
                           ],
                         ),
