@@ -75,6 +75,10 @@ class _GroupEditScreenState extends ConsumerState<GroupEditScreen> {
         mealLedgerSeparate: _mealEnabled && _mealLedgerSeparate,
         defaultNonVoterPolicy: _defaultNonVoterPolicy,
       ));
+      // Push the change up for an online mess — without this the local edit
+      // is overwritten by the server's old value on the next foreground pull
+      // (the pull upserts unconditionally), so the rename appears to revert.
+      triggerBackgroundSync(ref, _existing!.id);
     } else {
       final group = await repo.createGroup(
         name: _nameController.text.trim(),
