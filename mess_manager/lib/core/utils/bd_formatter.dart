@@ -44,6 +44,12 @@ class BdFormatter {
     return digits(formatted);
   }
 
+  /// Formats a meal count. Meals are half-steppable (0.5 = half a meal, and
+  /// guest meals add on top), so a plain [number] call would round 2.5 away
+  /// to "3" and silently misreport someone's month. Whole counts still render
+  /// clean ("3"), fractions keep one decimal ("2.5").
+  String mealCount(num value) => number(value, decimals: value % 1 == 0 ? 0 : 1);
+
   static const _bnMonths = [
     'জানুয়ারি', 'ফেব্রুয়ারি', 'মার্চ', 'এপ্রিল', 'মে', 'জুন',
     'জুলাই', 'আগস্ট', 'সেপ্টেম্বর', 'অক্টোবর', 'নভেম্বর', 'ডিসেম্বর',

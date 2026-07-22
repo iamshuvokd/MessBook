@@ -149,7 +149,7 @@ class MealGridScreen extends ConsumerWidget {
                             Text(l10n.mealsTodayTitle, style: const TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700)),
                             Text(
                               l10n.mealsTodaySummary(
-                                fmt.number(todaySummary.total, decimals: todaySummary.total % 1 == 0 ? 0 : 1),
+                                fmt.mealCount(todaySummary.total),
                                 fmt.number(todaySummary.eaters),
                               ),
                               style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800),
@@ -159,7 +159,7 @@ class MealGridScreen extends ConsumerWidget {
                       ),
                       if (todaySummary.guests > 0)
                         Text(
-                          l10n.mealsTodayGuests(fmt.number(todaySummary.guests, decimals: todaySummary.guests % 1 == 0 ? 0 : 1)),
+                          l10n.mealsTodayGuests(fmt.mealCount(todaySummary.guests)),
                           style: const TextStyle(color: Colors.white70, fontSize: 11),
                         ),
                     ],
@@ -291,7 +291,7 @@ class MealGridScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(l10n.mealsTotalMeals, style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700, color: Colors.grey)),
-                          Text(fmt.number(totalMeals, decimals: totalMeals % 1 == 0 ? 0 : 1), style: moneyTextStyle(fontSize: 20)),
+                          Text(fmt.mealCount(totalMeals), style: moneyTextStyle(fontSize: 20)),
                         ],
                       ),
                       Column(

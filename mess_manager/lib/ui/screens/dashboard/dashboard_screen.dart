@@ -191,7 +191,7 @@ class DashboardScreen extends ConsumerWidget {
                           const SizedBox(width: 8),
                           _MiniStat(
                             label: l10n.mealsMemberTotalMeals,
-                            value: fmt.number(monthMealCount, decimals: monthMealCount % 1 == 0 ? 0 : 1),
+                            value: fmt.mealCount(monthMealCount),
                           ),
                           const SizedBox(width: 8),
                           _MiniStat(label: l10n.reportMealRate, value: fmt.currency(mealRatePaisa)),
@@ -234,7 +234,7 @@ class DashboardScreen extends ConsumerWidget {
                                 final mine = monthMeals
                                     .where((m) => m.memberId == actingAs.id)
                                     .fold<double>(0, (a, m) => a + m.total);
-                                return fmt.number(mine, decimals: mine % 1 == 0 ? 0 : 1);
+                                return fmt.mealCount(mine);
                               }(),
                             ),
                             const SizedBox(width: 8),

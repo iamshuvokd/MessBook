@@ -358,7 +358,7 @@ class _ReportContent extends StatelessWidget {
               Row(
                 children: [
                   _stat(l10n.reportTotalSpent, fmt.currency(report.totalSpentPaisa)),
-                  _stat(l10n.reportTotalMeals, fmt.number(report.totalMeals)),
+                  _stat(l10n.reportTotalMeals, fmt.mealCount(report.totalMeals)),
                   _stat(l10n.reportMealRate, fmt.currency(report.mealRatePaisaX100 ~/ 100)),
                 ],
               ),
@@ -387,7 +387,7 @@ class _ReportContent extends StatelessWidget {
                   for (final row in report.rows)
                     DataRow(cells: [
                       DataCell(Text(_nameOf(row.memberId), style: const TextStyle(fontSize: 12))),
-                      DataCell(Text(fmt.number(row.meals), style: const TextStyle(fontSize: 12, fontFamily: moneyFontFamily))),
+                      DataCell(Text(fmt.mealCount(row.meals), style: const TextStyle(fontSize: 12, fontFamily: moneyFontFamily))),
                       DataCell(Text(fmt.number(row.mealBillPaisa / 100, decimals: 0), style: const TextStyle(fontSize: 12, fontFamily: moneyFontFamily))),
                       DataCell(Text(fmt.number(row.sharedCostsPaisa / 100, decimals: 0), style: const TextStyle(fontSize: 12, fontFamily: moneyFontFamily))),
                       DataCell(Text(fmt.number(row.paidPlusDepositsPaisa / 100, decimals: 0), style: const TextStyle(fontSize: 12, fontFamily: moneyFontFamily))),

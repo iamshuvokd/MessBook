@@ -65,9 +65,9 @@ class MemberMealDetailScreen extends ConsumerWidget {
         children: [
           Row(
             children: [
-              _StatCard(label: l10n.mealsMemberTotalMeals, value: fmt.number(ownTotal, decimals: ownTotal % 1 == 0 ? 0 : 1)),
+              _StatCard(label: l10n.mealsMemberTotalMeals, value: fmt.mealCount(ownTotal)),
               const SizedBox(width: 10),
-              _StatCard(label: l10n.mealsMemberGuest, value: fmt.number(guestTotal, decimals: guestTotal % 1 == 0 ? 0 : 1)),
+              _StatCard(label: l10n.mealsMemberGuest, value: fmt.mealCount(guestTotal)),
               const SizedBox(width: 10),
               _StatCard(label: l10n.mealsMemberBill, value: fmt.currency(bill), highlight: true),
             ],
@@ -132,8 +132,8 @@ class MemberMealDetailScreen extends ConsumerWidget {
                         child: Text(fmt.digits('${meal.date.day}'), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
                       ),
                       title: Text(fmt.day(meal.date)),
-                      subtitle: meal.guestCount > 0 ? Text(l10n.mealsGuestCount(fmt.number(meal.guestCount))) : null,
-                      trailing: Text(fmt.number(meal.total), style: const TextStyle(fontFamily: moneyFontFamily, fontWeight: FontWeight.w700)),
+                      subtitle: meal.guestCount > 0 ? Text(l10n.mealsGuestCount(fmt.mealCount(meal.guestCount))) : null,
+                      trailing: Text(fmt.mealCount(meal.total), style: const TextStyle(fontFamily: moneyFontFamily, fontWeight: FontWeight.w700)),
                     ),
                 ],
               ),
