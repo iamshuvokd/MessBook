@@ -1064,10 +1064,34 @@ abstract class AppLocalizations {
   /// **'Amount paid'**
   String get expensesAmountPaid;
 
+  /// No description provided for @expensesSectionCategory.
+  ///
+  /// In en, this message translates to:
+  /// **'What was it for?'**
+  String get expensesSectionCategory;
+
+  /// No description provided for @expensesSectionSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'Who shares the cost?'**
+  String get expensesSectionSplit;
+
+  /// No description provided for @expensesSectionNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note'**
+  String get expensesSectionNote;
+
+  /// No description provided for @expensesSectionReceipt.
+  ///
+  /// In en, this message translates to:
+  /// **'Receipt'**
+  String get expensesSectionReceipt;
+
   /// No description provided for @expensesPaidBy.
   ///
   /// In en, this message translates to:
-  /// **'Paid by'**
+  /// **'Where did the money come from?'**
   String get expensesPaidBy;
 
   /// No description provided for @expensesPaidFromFund.

@@ -535,7 +535,19 @@ class AppLocalizationsBn extends AppLocalizations {
   String get expensesAmountPaid => 'পরিমাণ';
 
   @override
-  String get expensesPaidBy => 'যিনি দিয়েছেন';
+  String get expensesSectionCategory => 'কী বাবদ খরচ?';
+
+  @override
+  String get expensesSectionSplit => 'খরচ কারা ভাগ করবে?';
+
+  @override
+  String get expensesSectionNote => 'নোট';
+
+  @override
+  String get expensesSectionReceipt => 'রসিদ';
+
+  @override
+  String get expensesPaidBy => 'টাকা কোথা থেকে এসেছে?';
 
   @override
   String get expensesPaidFromFund => 'মেসের ফান্ড';

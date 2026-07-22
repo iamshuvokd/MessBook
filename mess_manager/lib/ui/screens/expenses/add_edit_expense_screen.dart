@@ -12,10 +12,13 @@ import 'package:uuid/uuid.dart';
 import '../../../core/l10n/app_localizations.dart';
 import '../../../core/l10n/category_l10n.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/utils/bd_formatter.dart';
 import '../../../core/utils/icon_lookup.dart';
 import '../../../domain/models/expense.dart';
 import '../../../domain/models/member.dart';
+import '../../providers/app_providers.dart';
 import '../../providers/repository_providers.dart';
+import '../../widgets/section_header.dart';
 import 'split_editor_screen.dart';
 
 const _uuid = Uuid();
@@ -344,6 +347,10 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     final categories = ref.watch(categoriesForSelectedGroupProvider);
     final members = ref.watch(membersRepositoryProvider).watchMembers(widget.groupId, activeOnly: true);
     final premium = ref.watch(premiumUnlockedProvider).value ?? false;
+    final fmt = BdFormatter(
+      useBanglaDigits: ref.watch(banglaDigitsProvider),
+      locale: ref.watch(localeProvider).languageCode,
+    );
 
     if (_loading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -365,29 +372,13 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                     children: [
-                      InkWell(
-                        onTap: _pickDate,
-                        borderRadius: BorderRadius.circular(AppRadius.md),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_today_rounded, size: 18),
-                              const SizedBox(width: 8),
-                              Text('${_date.day}/${_date.month}/${_date.year}'),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Center(
-                        child: Text(
-                          '৳$_amountText',
-                          style: const TextStyle(fontSize: 42, fontWeight: FontWeight.w800, fontFamily: moneyFontFamily),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Center(child: Text(l10n.expensesAmountPaid, style: const TextStyle(fontSize: 12, color: Colors.grey))),
-                      const SizedBox(height: 18),
+                      // The amount is what this screen is really for, so it
+                      // leads — with the date sitting inside the same card as
+                      // a visibly tappable chip rather than a bare row that
+                      // read as static text.
+                      _amountHeader(l10n, fmt),
+                      const SizedBox(height: 22),
+                      SectionHeader(l10n.expensesSectionCategory),
                       categories.when(
                         data: (rows) => Wrap(
                           spacing: 8,
@@ -413,9 +404,8 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                         loading: () => const SizedBox.shrink(),
                         error: (_, _) => const SizedBox.shrink(),
                       ),
-                      const SizedBox(height: 20),
-                      Text(l10n.expensesPaidBy, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 22),
+                      SectionHeader(l10n.expensesPaidBy),
                       SegmentedButton<bool>(
                         segments: [
                           ButtonSegment(
@@ -436,13 +426,24 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                           _paidFromFundChosen = true;
                         }),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _paidFromFund ? l10n.expensesPaidFromFundHint : l10n.expensesPaidByMemberHint,
-                        style: TextStyle(fontSize: 11.5, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      const SizedBox(height: 10),
+                      // Spell out where the money moves, so nobody has to
+                      // reason about the ledger to pick the right option.
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.info_outline_rounded, size: 15, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _paidFromFund ? l10n.expensesPaidFromFundHint : l10n.expensesPaidByMemberHint,
+                              style: TextStyle(fontSize: 11.5, height: 1.35, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                            ),
+                          ),
+                        ],
                       ),
                       if (!_paidFromFund) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 12),
                         for (final id in _payerIds) _payerRow(memberList, id),
                         OutlinedButton.icon(
                           onPressed: () => _showPayerPicker(memberList),
@@ -450,13 +451,10 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                           label: Text(l10n.expensesAddPayer),
                         ),
                       ],
-                      const SizedBox(height: 20),
-                      TextField(
-                        controller: _noteController,
-                        decoration: InputDecoration(hintText: l10n.expensesNoteHint, prefixIcon: const Icon(Icons.edit_note_rounded)),
-                      ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 22),
+                      SectionHeader(l10n.expensesSectionSplit),
                       Card(
+                        margin: EdgeInsets.zero,
                         child: ListTile(
                           leading: const Icon(Icons.call_split_rounded),
                           title: Text(_splitSummaryText(memberList, l10n)),
@@ -464,8 +462,16 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                           onTap: () => _openSplitEditor(memberList),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 22),
+                      SectionHeader(l10n.expensesSectionNote),
+                      TextField(
+                        controller: _noteController,
+                        decoration: InputDecoration(hintText: l10n.expensesNoteHint, prefixIcon: const Icon(Icons.edit_note_rounded)),
+                      ),
+                      const SizedBox(height: 22),
+                      SectionHeader(l10n.expensesSectionReceipt),
                       Card(
+                        margin: EdgeInsets.zero,
                         child: _receiptPath != null
                             ? ListTile(
                                 leading: ClipRRect(
@@ -489,9 +495,9 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                     ],
                   ),
                 ),
-                _buildKeypad(),
+                _buildKeypad(fmt),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -529,6 +535,53 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
             ),
           );
         },
+      ),
+    );
+  }
+
+  /// The amount + date card. The amount is the whole point of the screen, so
+  /// it leads; the date is a real chip beside it, because as a bare icon+text
+  /// row it didn't read as tappable at all.
+  Widget _amountHeader(AppLocalizations l10n, BdFormatter fmt) {
+    final scheme = Theme.of(context).colorScheme;
+    final today = DateTime.now();
+    final isToday = _date.year == today.year && _date.month == today.month && _date.day == today.day;
+    final empty = _amountPaisa <= 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(AppRadius.xxl),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        children: [
+          Text(l10n.expensesAmountPaid,
+              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: scheme.onSurfaceVariant)),
+          const SizedBox(height: 6),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '৳${fmt.digits(_amountText)}',
+              style: TextStyle(
+                fontSize: 44,
+                fontWeight: FontWeight.w800,
+                fontFamily: moneyFontFamily,
+                // Grey out a zero amount so it reads as a placeholder
+                // waiting for the keypad, not as a real ৳0 expense.
+                color: empty ? scheme.onSurfaceVariant.withValues(alpha: 0.45) : scheme.onSurface,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          ActionChip(
+            avatar: const Icon(Icons.calendar_today_rounded, size: 15),
+            label: Text(isToday ? l10n.expensesToday : fmt.day(_date)),
+            onPressed: _pickDate,
+          ),
+        ],
       ),
     );
   }
@@ -616,22 +669,36 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     if (picked != null) _togglePayer(picked.id);
   }
 
-  Widget _buildKeypad() {
+  Widget _buildKeypad(BdFormatter fmt) {
     const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', 'back'];
-    return GridView.count(
-      crossAxisCount: 3,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      childAspectRatio: 2.4,
-      children: [
-        for (final k in keys)
-          InkWell(
-            onTap: () => _onKeypadTap(k),
-            child: Center(
-              child: k == 'back' ? const Icon(Icons.backspace_outlined) : Text(k, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+    final scheme = Theme.of(context).colorScheme;
+    // The keypad used to sit flush against the scrolling form with nothing
+    // marking where the content ended, so the digits looked like part of the
+    // list. Give it its own tinted surface with a top edge.
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        border: Border(top: BorderSide(color: scheme.outlineVariant)),
+      ),
+      child: GridView.count(
+        crossAxisCount: 3,
+        shrinkWrap: true,
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        physics: const NeverScrollableScrollPhysics(),
+        childAspectRatio: 2.4,
+        children: [
+          for (final k in keys)
+            InkWell(
+              onTap: () => _onKeypadTap(k),
+              child: Center(
+                child: k == 'back'
+                    ? const Icon(Icons.backspace_outlined)
+                    : Text(k == '.' ? k : fmt.digits(k),
+                        style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }
