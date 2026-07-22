@@ -25,6 +25,19 @@ class InviteCodeLookup {
   final List<UnclaimedMember> unclaimedMembers;
 }
 
+/// Keeps a pulled category global when this device already holds it as a
+/// global (device-wide default) row.
+///
+/// Default categories are seeded per device with no groupId and shared by
+/// every mess on it. The push stamps the ones an expense references with a
+/// groupId so the server — whose pull is `WHERE group_id = ?` — will hand
+/// them to other members. Applying that stamp back on the sender's own
+/// device would turn their shared default into a single mess's category and
+/// drop it out of every other mess's picker, so it is deliberately ignored
+/// for ids that are already global here.
+Category keepLocallyGlobal(Category pulled, Set<String> locallyGlobalIds) =>
+    locallyGlobalIds.contains(pulled.id) ? pulled.copyWith(groupId: const Value(null)) : pulled;
+
 /// Push/pull against the sync server for a single group, using Drift's
 /// generated `toJson`/`fromJson`/`toCompanion` on every row — the same
 /// pattern [BackupService] already uses for local export/import. The app
@@ -181,8 +194,28 @@ class SyncApiService {
 
     final group = await (_db.select(_db.groups)..where((g) => g.id.equals(groupId))).getSingle();
     final members = await (_db.select(_db.members)..where((m) => m.groupId.equals(groupId))).get();
-    final categories = await (_db.select(_db.categories)..where((c) => c.groupId.equals(groupId))).get();
     final expenses = await (_db.select(_db.expenses)..where((e) => e.groupId.equals(groupId))).get();
+
+    // The mess's own categories, PLUS any global default (groupId null) that
+    // its expenses actually use. Default categories are seeded per device and
+    // shared across every mess on it, so they carry no groupId — but the
+    // server's pull is `WHERE group_id = ?`, so pushing only group-scoped
+    // rows meant every "Bazar"/"Rent" category an expense pointed at never
+    // reached other members. Their devices then couldn't tell which expenses
+    // were meal-category, so the meal rate came out 0 and the meal ledger
+    // looked empty. They're stamped with this group's id purely so they can
+    // travel; see _applyPulled for why that doesn't make them group-only on
+    // the sender's own device.
+    final groupCategories = await (_db.select(_db.categories)..where((c) => c.groupId.equals(groupId))).get();
+    final missingCategoryIds = expenses.map((e) => e.categoryId).toSet()
+      ..removeAll(groupCategories.map((c) => c.id));
+    final referencedGlobals = missingCategoryIds.isEmpty
+        ? const <Category>[]
+        : await (_db.select(_db.categories)..where((c) => c.id.isIn(missingCategoryIds.toList()))).get();
+    final categories = [
+      ...groupCategories,
+      for (final c in referencedGlobals) c.copyWith(groupId: Value(groupId)),
+    ];
     final expensePayers = await (_db.select(_db.expensePayers)..where((p) => p.expenseId.isIn(expenseIds))).get();
     final expenseSplits = await (_db.select(_db.expenseSplits)..where((s) => s.expenseId.isIn(expenseIds))).get();
     final meals = await (_db.select(_db.meals)..where((m) => m.groupId.equals(groupId))).get();
@@ -224,14 +257,24 @@ class SyncApiService {
   Future<void> _applyPulled(Map<String, dynamic> tables) async {
     List<Map<String, dynamic>> rows(String key) => ((tables[key] as List?) ?? const []).cast<Map<String, dynamic>>();
 
+    // A category that is global on THIS device stays global. The push stamps
+    // referenced defaults with a groupId so they can travel to other members;
+    // applying that back verbatim would re-scope the sender's own shared
+    // default to a single mess, and it would vanish from the category picker
+    // of every other mess on their phone.
+    final locallyGlobalCategoryIds =
+        (await (_db.select(_db.categories)..where((c) => c.groupId.isNull())).get()).map((c) => c.id).toSet();
+
     await _db.batch((batch) {
       // `inviteCode` is never part of the server payload (server-managed,
       // client-local-only) — nullToAbsent:true keeps a pull from wiping out
       // the locally-recorded invite code on the App Admin's own device.
       batch.insertAllOnConflictUpdate(_db.groups, [for (final r in rows('groups')) Group.fromJson(r).toCompanion(true)]);
       batch.insertAllOnConflictUpdate(_db.members, [for (final r in rows('members')) Member.fromJson(r).toCompanion(false)]);
-      batch.insertAllOnConflictUpdate(
-          _db.categories, [for (final r in rows('categories')) Category.fromJson(r).toCompanion(false)]);
+      batch.insertAllOnConflictUpdate(_db.categories, [
+        for (final r in rows('categories'))
+          keepLocallyGlobal(Category.fromJson(r), locallyGlobalCategoryIds).toCompanion(false),
+      ]);
       batch.insertAllOnConflictUpdate(_db.expenses, [for (final r in rows('expenses')) Expense.fromJson(r).toCompanion(false)]);
       batch.insertAllOnConflictUpdate(
           _db.expensePayers, [for (final r in rows('expensePayers')) ExpensePayer.fromJson(r).toCompanion(false)]);
