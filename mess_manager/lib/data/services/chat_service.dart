@@ -49,8 +49,15 @@ class ChatService {
   final ApiClient _apiClient;
   sio.Socket? _socket;
   final _messages = StreamController<ChatMessage>.broadcast();
+  final _joined = StreamController<bool>.broadcast();
 
   Stream<ChatMessage> get messages => _messages.stream;
+
+  /// `true` once this device is in the group's room and live messages will
+  /// arrive; `false` while disconnected or retrying. Emits on every change,
+  /// so the UI can clear its error banner when the connection comes back
+  /// instead of staying stuck on the first failure.
+  Stream<bool> get joined => _joined.stream;
 
   bool get isConnected => _socket?.connected ?? false;
 
@@ -69,18 +76,25 @@ class ChatService {
       _messages.add(ChatMessage.fromJson((data as Map).cast<String, dynamic>()));
     });
 
-    final connected = Completer<void>();
+    // (Re)join the room on EVERY connect, exactly as RealtimeService does.
+    // socket.io reconnects with a brand-new server-side socket that belongs
+    // to no rooms, so joining only once meant chat silently stopped
+    // receiving `newMessage` after the first network blip, server restart or
+    // app resume — "works once, then dies".
     socket.onConnect((_) {
-      if (!connected.isCompleted) connected.complete();
+      socket.emitWithAck('joinGroup', groupId, ack: (dynamic res) {
+        final error = res is Map ? res['error'] : null;
+        _joined.add(error == null);
+      });
     });
-    socket.onConnectError((err) {
-      if (!connected.isCompleted) connected.completeError(ChatServiceException('$err'));
-    });
-    socket.connect();
-    await connected.future.timeout(const Duration(seconds: 10));
+    socket.onDisconnect((_) => _joined.add(false));
 
-    final ack = (await socket.emitWithAckAsync('joinGroup', groupId) as Map).cast<String, dynamic>();
-    if (ack['error'] != null) throw ChatServiceException(ack['error'] as String);
+    // Fire-and-forget, like RealtimeService. This used to await the first
+    // connect with a 10s timeout and throw, which permanently killed chat
+    // for that screen visit if the server happened to be unreachable at the
+    // moment it opened — it never recovered even once the server came back.
+    // socket.io keeps retrying in the background and re-joins above.
+    socket.connect();
   }
 
   Future<ChatMessage> sendMessage(String groupId, String text, {String? clientNonce}) async {
@@ -115,5 +129,6 @@ class ChatService {
   void dispose() {
     disconnect();
     _messages.close();
+    _joined.close();
   }
 }

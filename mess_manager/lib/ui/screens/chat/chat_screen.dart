@@ -27,6 +27,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _scrollController = ScrollController();
   final List<ChatMessage> _messages = [];
   StreamSubscription<ChatMessage>? _subscription;
+  StreamSubscription<bool>? _joinedSubscription;
   bool _loading = true;
   bool _sending = false;
   String? _error;
@@ -44,6 +45,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   Future<void> _init() async {
     final chat = ref.read(chatServiceProvider);
+
+    // Subscribe BEFORE connecting. This used to run after connectAndJoin,
+    // so a slow or failed first connect threw past it and the screen never
+    // listened at all — live messages then stayed dead for the whole visit
+    // even after the socket recovered on its own.
+    _subscription = chat.messages.listen((message) {
+      if (message.groupId != widget.groupId || !mounted) return;
+      setState(() => _messages.add(message));
+      _scrollToBottom();
+    });
+
+    // Track the live connection so the banner reflects reality now rather
+    // than whatever happened on the first attempt.
+    _joinedSubscription = chat.joined.listen((joined) {
+      if (!mounted) return;
+      setState(() => _error = joined ? null : AppLocalizations.of(context).chatConnectError);
+    });
+
     try {
       final history = await chat.fetchHistory(widget.groupId);
       if (!mounted) return;
@@ -52,13 +71,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         _loading = false;
       });
       _scrollToBottom();
-
-      await chat.connectAndJoin(widget.groupId);
-      _subscription = chat.messages.listen((message) {
-        if (message.groupId != widget.groupId || !mounted) return;
-        setState(() => _messages.add(message));
-        _scrollToBottom();
-      });
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -66,6 +78,10 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         _error = AppLocalizations.of(context).chatConnectError;
       });
     }
+
+    // Never awaited: it retries in the background and the banner above
+    // clears itself once the room is joined.
+    await chat.connectAndJoin(widget.groupId);
   }
 
   void _scrollToBottom() {
@@ -95,6 +111,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   void dispose() {
     _subscription?.cancel();
+    _joinedSubscription?.cancel();
     ref.read(chatServiceProvider).disconnect();
     _textController.dispose();
     _scrollController.dispose();
