@@ -148,6 +148,52 @@ class GroupsRepository {
     );
   }
 
+  /// Wipes a mess and everything belonging to it from this device, in one
+  /// transaction so a failure part-way can't leave a half-deleted mess.
+  ///
+  /// Child rows (splits, votes, routines, leaves) hang off a parent rather
+  /// than the group, so they're cleared via their parent's ids — deleting
+  /// only the group-scoped tables would strand them as invisible orphans
+  /// that no screen shows and nothing ever cleans up.
+  Future<void> deleteGroupLocal(String groupId) async {
+    await _db.transaction(() async {
+      final memberIds = (await (_db.select(_db.members)..where((m) => m.groupId.equals(groupId))).get())
+          .map((m) => m.id)
+          .toList();
+      final expenseIds = (await (_db.select(_db.expenses)..where((e) => e.groupId.equals(groupId))).get())
+          .map((e) => e.id)
+          .toList();
+      final pollIds = (await (_db.select(_db.mealPolls)..where((p) => p.groupId.equals(groupId))).get())
+          .map((p) => p.id)
+          .toList();
+
+      if (expenseIds.isNotEmpty) {
+        await (_db.delete(_db.expensePayers)..where((t) => t.expenseId.isIn(expenseIds))).go();
+        await (_db.delete(_db.expenseSplits)..where((t) => t.expenseId.isIn(expenseIds))).go();
+      }
+      if (pollIds.isNotEmpty) {
+        await (_db.delete(_db.mealPollVotes)..where((t) => t.pollId.isIn(pollIds))).go();
+      }
+      if (memberIds.isNotEmpty) {
+        await (_db.delete(_db.memberMealRoutines)..where((t) => t.memberId.isIn(memberIds))).go();
+        await (_db.delete(_db.mealLeaves)..where((t) => t.memberId.isIn(memberIds))).go();
+      }
+
+      await (_db.delete(_db.mealPolls)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.meals)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.deposits)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.settlements)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.expenses)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.bazarDuties)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.mealSlots)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.months)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.recurringRules)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.categories)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.members)..where((t) => t.groupId.equals(groupId))).go();
+      await (_db.delete(_db.groups)..where((t) => t.id.equals(groupId))).go();
+    });
+  }
+
   /// Records the invite code minted by the server when this mess is
   /// "brought online" — marks the group as online locally.
   Future<void> setInviteCode(String groupId, String inviteCode) async {

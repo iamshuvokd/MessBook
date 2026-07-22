@@ -1940,6 +1940,66 @@ abstract class AppLocalizations {
   /// **'Reminders'**
   String get settingsRemindersSection;
 
+  /// No description provided for @settingsDangerSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Danger zone'**
+  String get settingsDangerSection;
+
+  /// No description provided for @settingsDeleteMess.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete this mess'**
+  String get settingsDeleteMess;
+
+  /// No description provided for @settingsDeleteMessSub.
+  ///
+  /// In en, this message translates to:
+  /// **'Removes the mess and all its data for every member'**
+  String get settingsDeleteMessSub;
+
+  /// No description provided for @deleteMessConfirmTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete {name}?'**
+  String deleteMessConfirmTitle(String name);
+
+  /// No description provided for @deleteMessConfirmBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every meal, expense, deposit and balance in this mess is permanently deleted, for you and for every other member. This cannot be undone.'**
+  String get deleteMessConfirmBody;
+
+  /// No description provided for @deleteMessConfirmHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type DELETE to confirm'**
+  String get deleteMessConfirmHint;
+
+  /// No description provided for @deleteMessButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete forever'**
+  String get deleteMessButton;
+
+  /// No description provided for @deleteMessDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Mess deleted'**
+  String get deleteMessDone;
+
+  /// No description provided for @deleteMessFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t delete the mess. Check your connection and try again.'**
+  String get deleteMessFailed;
+
+  /// No description provided for @deleteMessOfflineNote.
+  ///
+  /// In en, this message translates to:
+  /// **'This mess is online. It will be deleted for every member.'**
+  String get deleteMessOfflineNote;
+
   /// No description provided for @settingsDataSection.
   ///
   /// In en, this message translates to:

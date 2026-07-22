@@ -1015,6 +1015,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get settingsRemindersSection => 'Reminders';
 
   @override
+  String get settingsDangerSection => 'Danger zone';
+
+  @override
+  String get settingsDeleteMess => 'Delete this mess';
+
+  @override
+  String get settingsDeleteMessSub =>
+      'Removes the mess and all its data for every member';
+
+  @override
+  String deleteMessConfirmTitle(String name) {
+    return 'Delete $name?';
+  }
+
+  @override
+  String get deleteMessConfirmBody =>
+      'Every meal, expense, deposit and balance in this mess is permanently deleted, for you and for every other member. This cannot be undone.';
+
+  @override
+  String get deleteMessConfirmHint => 'Type DELETE to confirm';
+
+  @override
+  String get deleteMessButton => 'Delete forever';
+
+  @override
+  String get deleteMessDone => 'Mess deleted';
+
+  @override
+  String get deleteMessFailed =>
+      'Couldn\'t delete the mess. Check your connection and try again.';
+
+  @override
+  String get deleteMessOfflineNote =>
+      'This mess is online. It will be deleted for every member.';
+
+  @override
   String get settingsDataSection => 'Data';
 
   @override

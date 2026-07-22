@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mess_manager/data/db/app_database.dart' hide Group;
@@ -107,5 +108,95 @@ void main() {
     final after = (await groups.getGroup(created.id))!;
     expect(after.name, 'New Name');
     expect(after.pollReminderMinutes, 45);
+  });
+
+  group('deleteGroupLocal', () {
+    /// Fills one mess with a row in every table that hangs off it, so a
+    /// delete that forgets a table fails loudly instead of passing on an
+    /// empty database.
+    Future<String> seedFullMess() async {
+      final g = await groups.createGroup(name: 'Doomed', type: GroupType.mess);
+      final now = DateTime.now().millisecondsSinceEpoch;
+
+      await db.into(db.members).insert(MembersCompanion.insert(
+          id: 'm1', groupId: g.id, name: 'Shuvo', joinDate: now, updatedAt: now));
+      await db.into(db.categories).insert(CategoriesCompanion.insert(
+          id: 'c1', groupId: Value(g.id), name: 'Bazar', icon: 'cart', updatedAt: now));
+      await db.into(db.expenses).insert(ExpensesCompanion.insert(
+          id: 'e1', groupId: g.id, amountPaisa: 55000, date: now, categoryId: 'c1', updatedAt: now));
+      await db.into(db.expensePayers).insert(
+          ExpensePayersCompanion.insert(expenseId: 'e1', memberId: 'm1', amountPaidPaisa: 55000));
+      await db.into(db.expenseSplits).insert(
+          ExpenseSplitsCompanion.insert(expenseId: 'e1', memberId: 'm1', amountPaisa: 55000, splitType: 'meal'));
+      await db.into(db.meals).insert(MealsCompanion.insert(
+          id: 'meal1', groupId: g.id, memberId: 'm1', date: now, updatedAt: now));
+      await db.into(db.deposits).insert(DepositsCompanion.insert(
+          id: 'd1', groupId: g.id, memberId: 'm1', amountPaisa: 180000, date: now, updatedAt: now));
+      await db.into(db.settlements).insert(SettlementsCompanion.insert(
+          id: 's1', groupId: g.id, fromMemberId: 'm1', toMemberId: 'm1', amountPaisa: 5000, date: now, updatedAt: now));
+      await db.into(db.mealSlots).insert(MealSlotsCompanion.insert(
+          id: 'slot1', groupId: g.id, name: 'Lunch', updatedAt: now));
+      await db.into(db.memberMealRoutines).insert(MemberMealRoutinesCompanion.insert(
+          id: 'r1', memberId: 'm1', slotId: 'slot1', updatedAt: now));
+      await db.into(db.mealLeaves).insert(MealLeavesCompanion.insert(
+          id: 'lv1', memberId: 'm1', fromDate: now, toDate: now, updatedAt: now));
+      await db.into(db.bazarDuties).insert(BazarDutiesCompanion.insert(
+          id: 'b1', groupId: g.id, memberId: 'm1', date: now, updatedAt: now));
+      await db.into(db.mealPolls).insert(MealPollsCompanion.insert(
+          id: 'p1', groupId: g.id, date: now, type: 'count', closeAt: now, createdByMemberId: 'm1', updatedAt: now));
+      await db.into(db.mealPollVotes).insert(
+          MealPollVotesCompanion.insert(pollId: 'p1', memberId: 'm1', valueJson: '{}', votedAt: now));
+      return g.id;
+    }
+
+    test('removes the mess and every row belonging to it', () async {
+      final groupId = await seedFullMess();
+
+      await groups.deleteGroupLocal(groupId);
+
+      expect(await groups.getGroup(groupId), isNull);
+      expect(await db.select(db.members).get(), isEmpty);
+      // Default categories are global (groupId null) and shared by every
+      // mess, so they must SURVIVE — only this mess's own are removed.
+      final categories = await db.select(db.categories).get();
+      expect(categories.where((c) => c.groupId == groupId), isEmpty);
+      expect(categories.where((c) => c.groupId == null), isNotEmpty,
+          reason: 'shared default categories must not be deleted with a mess');
+      expect(await db.select(db.expenses).get(), isEmpty);
+      expect(await db.select(db.meals).get(), isEmpty);
+      expect(await db.select(db.deposits).get(), isEmpty);
+      expect(await db.select(db.settlements).get(), isEmpty);
+      expect(await db.select(db.mealSlots).get(), isEmpty);
+      expect(await db.select(db.bazarDuties).get(), isEmpty);
+      expect(await db.select(db.mealPolls).get(), isEmpty);
+    });
+
+    test('leaves no orphaned child rows behind', () async {
+      final groupId = await seedFullMess();
+
+      await groups.deleteGroupLocal(groupId);
+
+      // These hang off a parent, not the group, so a delete that only
+      // clears group-scoped tables strands them invisibly forever.
+      expect(await db.select(db.expensePayers).get(), isEmpty, reason: 'orphaned expense payers');
+      expect(await db.select(db.expenseSplits).get(), isEmpty, reason: 'orphaned expense splits');
+      expect(await db.select(db.mealPollVotes).get(), isEmpty, reason: 'orphaned poll votes');
+      expect(await db.select(db.memberMealRoutines).get(), isEmpty, reason: 'orphaned meal routines');
+      expect(await db.select(db.mealLeaves).get(), isEmpty, reason: 'orphaned meal leaves');
+    });
+
+    test('does not touch a DIFFERENT mess on the same device', () async {
+      final doomed = await seedFullMess();
+      final keeper = await groups.createGroup(name: 'Keeper', type: GroupType.mess);
+      final now = DateTime.now().millisecondsSinceEpoch;
+      await db.into(db.members).insert(MembersCompanion.insert(
+          id: 'k1', groupId: keeper.id, name: 'Pijush', joinDate: now, updatedAt: now));
+
+      await groups.deleteGroupLocal(doomed);
+
+      expect(await groups.getGroup(keeper.id), isNotNull, reason: 'the other mess must survive');
+      final survivors = await db.select(db.members).get();
+      expect(survivors.map((m) => m.id), ['k1']);
+    });
   });
 }

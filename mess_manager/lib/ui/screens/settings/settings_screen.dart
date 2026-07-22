@@ -227,10 +227,95 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+          // Deleting the whole mess is App-Admin-only and non-delegable —
+          // the server refuses it for anyone else, so it isn't offered here
+          // either. Kept in its own section at the very bottom, away from
+          // everyday settings.
+          if (isAppAdmin) ...[
+            const SizedBox(height: 18),
+            SectionHeader(l10n.settingsDangerSection),
+            Card(
+              child: ListTile(
+                leading: Icon(Icons.delete_forever_rounded, color: Theme.of(context).colorScheme.error),
+                title: Text(l10n.settingsDeleteMess, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                subtitle: Text(l10n.settingsDeleteMessSub, style: const TextStyle(fontSize: 11.5)),
+                onTap: () => _showDeleteMessDialog(context, ref),
+              ),
+            ),
+          ],
         ],
       ),
       bottomNavigationBar: AppBottomNav(groupId: groupId, current: AppTab.settings),
     );
+  }
+
+  /// Deleting a mess wipes every member's data, so it asks for the same
+  /// typed confirmation as a full reset rather than a tap-through dialog.
+  Future<void> _showDeleteMessDialog(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context);
+    final group = ref.read(selectedGroupProvider);
+    if (group == null) return;
+    final isOnline = group.inviteCode != null;
+    final controller = TextEditingController();
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.xl)),
+          title: Text(l10n.deleteMessConfirmTitle(group.name)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.deleteMessConfirmBody, style: const TextStyle(fontSize: 12.5)),
+              if (isOnline) ...[
+                const SizedBox(height: 8),
+                Text(l10n.deleteMessOfflineNote,
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.error)),
+              ],
+              const SizedBox(height: 12),
+              Text(l10n.deleteMessConfirmHint, style: const TextStyle(fontSize: 12.5)),
+              const SizedBox(height: 6),
+              TextField(
+                controller: controller,
+                textCapitalization: TextCapitalization.characters,
+                inputFormatters: [UpperCaseTextFormatter()],
+                decoration: InputDecoration(hintText: l10n.settingsResetTypeHere),
+                onChanged: (_) => setState(() {}),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: Text(l10n.commonCancel)),
+            FilledButton(
+              onPressed: controller.text.trim() == 'DELETE' ? () => Navigator.of(dialogContext).pop(true) : null,
+              style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+              child: Text(l10n.deleteMessButton),
+            ),
+          ],
+        ),
+      ),
+    );
+    if (confirmed != true) return;
+
+    // Server first: if it refuses (offline, or no longer App Admin there),
+    // stop and keep the local copy rather than destroying the only remaining
+    // data and leaving the mess alive for everyone else.
+    if (isOnline) {
+      try {
+        await ref.read(syncApiServiceProvider).deleteGroupRemote(groupId);
+      } catch (_) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.deleteMessFailed)));
+        return;
+      }
+    }
+
+    await ref.read(groupsRepositoryProvider).deleteGroupLocal(groupId);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(l10n.deleteMessDone)));
+    context.go('/groups');
   }
 
   Future<void> _toggleLock(BuildContext context, WidgetRef ref, bool enable) async {

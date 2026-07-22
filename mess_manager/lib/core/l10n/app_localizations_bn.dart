@@ -1005,6 +1005,42 @@ class AppLocalizationsBn extends AppLocalizations {
   String get settingsRemindersSection => 'রিমাইন্ডার';
 
   @override
+  String get settingsDangerSection => 'বিপজ্জনক অংশ';
+
+  @override
+  String get settingsDeleteMess => 'এই মেস মুছে ফেলুন';
+
+  @override
+  String get settingsDeleteMessSub =>
+      'মেস ও এর সব ডেটা প্রত্যেক সদস্যের কাছ থেকে মুছে যাবে';
+
+  @override
+  String deleteMessConfirmTitle(String name) {
+    return '$name মুছে ফেলবেন?';
+  }
+
+  @override
+  String get deleteMessConfirmBody =>
+      'এই মেসের সব মিল, খরচ, জমা ও হিসাব আপনার এবং প্রত্যেক সদস্যের কাছ থেকে স্থায়ীভাবে মুছে যাবে। এটি আর ফিরিয়ে আনা যাবে না।';
+
+  @override
+  String get deleteMessConfirmHint => 'নিশ্চিত করতে DELETE টাইপ করুন';
+
+  @override
+  String get deleteMessButton => 'চিরতরে মুছুন';
+
+  @override
+  String get deleteMessDone => 'মেস মুছে ফেলা হয়েছে';
+
+  @override
+  String get deleteMessFailed =>
+      'মেস মোছা যায়নি। ইন্টারনেট সংযোগ দেখে আবার চেষ্টা করুন।';
+
+  @override
+  String get deleteMessOfflineNote =>
+      'এই মেসটি অনলাইন। এটি প্রত্যেক সদস্যের কাছ থেকে মুছে যাবে।';
+
+  @override
   String get settingsDataSection => 'ডেটা';
 
   @override

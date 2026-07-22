@@ -119,6 +119,12 @@ class SyncApiService {
     await _api.delete('/groups/$groupId/bazar/$dutyId');
   }
 
+  /// Deletes the entire mess server-side, including every member's copy of
+  /// it. App-Admin-only and enforced there, not here. Irreversible.
+  Future<void> deleteGroupRemote(String groupId) async {
+    await _api.delete('/groups/$groupId');
+  }
+
   /// Hands the App Admin role (and server-side mess ownership) to another
   /// already-joined member. The server does the role swap + `owner_user_id`
   /// move in one call; the caller must still be the App Admin server-side at
