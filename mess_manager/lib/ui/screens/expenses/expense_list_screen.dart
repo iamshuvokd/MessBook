@@ -192,7 +192,8 @@ class _ExpenseRow extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final scheme = Theme.of(context).colorScheme;
     final payerLabel = detail.payers.isEmpty
-        ? ''
+        // No payer = spent from the collected deposits, not fronted by anyone.
+        ? l10n.expensesPaidFromFund
         : detail.payers.length == 1
             ? l10n.expensesPaid
             : l10n.expensesPayersCount(detail.payers.length);

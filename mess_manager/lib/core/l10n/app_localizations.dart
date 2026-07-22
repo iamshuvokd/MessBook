@@ -1070,6 +1070,30 @@ abstract class AppLocalizations {
   /// **'Paid by'**
   String get expensesPaidBy;
 
+  /// No description provided for @expensesPaidFromFund.
+  ///
+  /// In en, this message translates to:
+  /// **'Mess fund'**
+  String get expensesPaidFromFund;
+
+  /// No description provided for @expensesPaidByMember.
+  ///
+  /// In en, this message translates to:
+  /// **'A member paid'**
+  String get expensesPaidByMember;
+
+  /// No description provided for @expensesPaidFromFundHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Spent from everyone\'s deposits. Nobody is owed this back — it is charged to each member by their own meals.'**
+  String get expensesPaidFromFundHint;
+
+  /// No description provided for @expensesPaidByMemberHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Someone paid out of their own pocket, so the mess owes them this back.'**
+  String get expensesPaidByMemberHint;
+
   /// No description provided for @expensesAddPayer.
   ///
   /// In en, this message translates to:

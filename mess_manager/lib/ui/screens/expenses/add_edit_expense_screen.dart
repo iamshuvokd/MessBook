@@ -32,15 +32,30 @@ ExpenseSaveBlocker expenseSaveBlocker({
   required int payersSumPaisa,
   // null = the split editor hasn't been configured yet.
   required int? splitsSumPaisa,
+  // The mess collected deposits up front and this was spent out of that
+  // pot, so no individual fronted the money and there is nobody to pay
+  // back. Demanding a payer here would credit someone `totalPaid` they
+  // never actually spent, leaving the mess owing them the bazar amount on
+  // top of the deposits it already holds.
+  bool paidFromFund = false,
 }) {
   if (amountPaisa <= 0) return ExpenseSaveBlocker.amount;
   if (!hasCategory) return ExpenseSaveBlocker.category;
-  if (!hasPayer) return ExpenseSaveBlocker.payer;
-  if (payersSumPaisa != amountPaisa) return ExpenseSaveBlocker.payerSum;
+  if (!paidFromFund) {
+    if (!hasPayer) return ExpenseSaveBlocker.payer;
+    if (payersSumPaisa != amountPaisa) return ExpenseSaveBlocker.payerSum;
+  }
   if (splitsSumPaisa == null) return ExpenseSaveBlocker.split;
   if (splitsSumPaisa != amountPaisa) return ExpenseSaveBlocker.splitSum;
   return ExpenseSaveBlocker.none;
 }
+
+/// Whether a newly-picked category should default to being paid out of the
+/// mess fund. Bazar/grocery runs are the money flow this mess actually uses
+/// — everyone deposits first, the manager spends from the pot — so those
+/// default to the fund. Rent/WiFi and friends still default to a member
+/// paying, since those are typically fronted by one person.
+bool defaultPaidFromFundForCategory({required bool isMealCategory}) => isMealCategory;
 
 /// Which split a newly-picked category should default to. Bazar/grocery
 /// (meal) categories default to a by-meals split, so each member is charged
@@ -71,6 +86,11 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
   // Once the user picks a split themselves (or we loaded an existing
   // expense), stop re-defaulting it when the category changes.
   bool _splitTypeChosen = false;
+  /// True = spent out of the collected deposits, so the expense has no payer.
+  bool _paidFromFund = false;
+  /// Mirrors [_splitTypeChosen]: once the user picks the funding source
+  /// themselves, stop re-defaulting it when the category changes.
+  bool _paidFromFundChosen = false;
   Map<String, int>? _splits;
   String? _receiptPath;
   bool _loading = false;
@@ -100,6 +120,9 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
         _payerIds.add(p.memberId);
         _payerAmountControllers[p.memberId] = TextEditingController(text: (p.amountPaisa / 100).toStringAsFixed(2));
       }
+      // No payer rows means it was spent from the fund.
+      _paidFromFund = draft.payers.isEmpty;
+      _paidFromFundChosen = true;
       _splitType = draft.splitType;
       _splitTypeChosen = true;
       _splits = {for (final s in draft.splits) s.memberId: s.amountPaisa};
@@ -216,6 +239,7 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
         hasPayer: _payerIds.isNotEmpty,
         payersSumPaisa: _payersSum,
         splitsSumPaisa: _splits?.values.fold<int>(0, (a, b) => a + b),
+        paidFromFund: _paidFromFund,
       );
 
   bool get _canSave => _saveBlocker == ExpenseSaveBlocker.none;
@@ -231,10 +255,14 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
     }
     setState(() => _saving = true);
     final repo = ref.read(expensesRepositoryProvider);
-    final payers = [
-      for (final id in _payerIds)
-        ExpensePayerEntry(memberId: id, amountPaisa: ((double.tryParse(_payerAmountControllers[id]!.text) ?? 0) * 100).round()),
-    ];
+    // Fund-paid expenses carry no payers at all, so nobody is credited
+    // `totalPaid` for money that came out of the shared pot.
+    final payers = _paidFromFund
+        ? const <ExpensePayerEntry>[]
+        : [
+            for (final id in _payerIds)
+              ExpensePayerEntry(memberId: id, amountPaisa: ((double.tryParse(_payerAmountControllers[id]!.text) ?? 0) * 100).round()),
+          ];
     final splits = [for (final e in _splits!.entries) ExpenseSplitEntry(memberId: e.key, amountPaisa: e.value)];
     final note = _noteController.text.trim();
 
@@ -375,6 +403,9 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                                   if (!_splitTypeChosen) {
                                     _splitType = defaultSplitForCategory(isMealCategory: c.isMealCategory);
                                   }
+                                  if (!_paidFromFundChosen) {
+                                    _paidFromFund = defaultPaidFromFundForCategory(isMealCategory: c.isMealCategory);
+                                  }
                                 }),
                               ),
                           ],
@@ -385,12 +416,40 @@ class _AddEditExpenseScreenState extends ConsumerState<AddEditExpenseScreen> {
                       const SizedBox(height: 20),
                       Text(l10n.expensesPaidBy, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                       const SizedBox(height: 8),
-                      for (final id in _payerIds) _payerRow(memberList, id),
-                      OutlinedButton.icon(
-                        onPressed: () => _showPayerPicker(memberList),
-                        icon: const Icon(Icons.add_rounded, size: 18),
-                        label: Text(l10n.expensesAddPayer),
+                      SegmentedButton<bool>(
+                        segments: [
+                          ButtonSegment(
+                            value: true,
+                            icon: const Icon(Icons.savings_rounded, size: 16),
+                            label: Text(l10n.expensesPaidFromFund),
+                          ),
+                          ButtonSegment(
+                            value: false,
+                            icon: const Icon(Icons.person_rounded, size: 16),
+                            label: Text(l10n.expensesPaidByMember),
+                          ),
+                        ],
+                        selected: {_paidFromFund},
+                        showSelectedIcon: false,
+                        onSelectionChanged: (s) => setState(() {
+                          _paidFromFund = s.first;
+                          _paidFromFundChosen = true;
+                        }),
                       ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _paidFromFund ? l10n.expensesPaidFromFundHint : l10n.expensesPaidByMemberHint,
+                        style: TextStyle(fontSize: 11.5, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                      if (!_paidFromFund) ...[
+                        const SizedBox(height: 8),
+                        for (final id in _payerIds) _payerRow(memberList, id),
+                        OutlinedButton.icon(
+                          onPressed: () => _showPayerPicker(memberList),
+                          icon: const Icon(Icons.add_rounded, size: 18),
+                          label: Text(l10n.expensesAddPayer),
+                        ),
+                      ],
                       const SizedBox(height: 20),
                       TextField(
                         controller: _noteController,

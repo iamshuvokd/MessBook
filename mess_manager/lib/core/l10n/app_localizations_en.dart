@@ -538,6 +538,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get expensesPaidBy => 'Paid by';
 
   @override
+  String get expensesPaidFromFund => 'Mess fund';
+
+  @override
+  String get expensesPaidByMember => 'A member paid';
+
+  @override
+  String get expensesPaidFromFundHint =>
+      'Spent from everyone\'s deposits. Nobody is owed this back — it is charged to each member by their own meals.';
+
+  @override
+  String get expensesPaidByMemberHint =>
+      'Someone paid out of their own pocket, so the mess owes them this back.';
+
+  @override
   String get expensesAddPayer => 'Add payer';
 
   @override

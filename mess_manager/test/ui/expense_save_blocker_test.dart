@@ -9,6 +9,7 @@ void main() {
     bool hasPayer = true,
     int? payersSum,
     int? splitsSum = 10000,
+    bool paidFromFund = false,
   }) =>
       expenseSaveBlocker(
         amountPaisa: amount,
@@ -16,6 +17,7 @@ void main() {
         hasPayer: hasPayer,
         payersSumPaisa: payersSum ?? amount,
         splitsSumPaisa: splitsSum,
+        paidFromFund: paidFromFund,
       );
 
   test('a complete expense has nothing blocking Save', () {
@@ -58,5 +60,41 @@ void main() {
       ),
       ExpenseSaveBlocker.amount,
     );
+  });
+
+  // This mess collects deposits up front and the manager spends from that
+  // pot, so a bazar expense has no individual payer to name. Requiring one
+  // made those expenses impossible to save.
+  group('paid from the mess fund', () {
+    test('saves with no payer at all', () {
+      expect(blockerFor(paidFromFund: true, hasPayer: false, payersSum: 0), ExpenseSaveBlocker.none);
+    });
+
+    test('does not demand that payer amounts add up, since there are none', () {
+      expect(blockerFor(paidFromFund: true, hasPayer: false, payersSum: 0, splitsSum: 10000),
+          ExpenseSaveBlocker.none);
+    });
+
+    test('still enforces the amount, category and split rules', () {
+      expect(blockerFor(paidFromFund: true, hasPayer: false, amount: 0), ExpenseSaveBlocker.amount);
+      expect(blockerFor(paidFromFund: true, hasPayer: false, hasCategory: false), ExpenseSaveBlocker.category);
+      expect(blockerFor(paidFromFund: true, hasPayer: false, splitsSum: null), ExpenseSaveBlocker.split);
+      expect(blockerFor(paidFromFund: true, hasPayer: false, splitsSum: 9000), ExpenseSaveBlocker.splitSum);
+    });
+
+    test('a member-paid expense still requires a payer', () {
+      expect(blockerFor(paidFromFund: false, hasPayer: false), ExpenseSaveBlocker.payer);
+      expect(blockerFor(paidFromFund: false, payersSum: 5000), ExpenseSaveBlocker.payerSum);
+    });
+  });
+
+  group('defaultPaidFromFundForCategory', () {
+    test('bazar/meal categories default to the mess fund', () {
+      expect(defaultPaidFromFundForCategory(isMealCategory: true), isTrue);
+    });
+
+    test('rent/wifi and friends default to a member paying', () {
+      expect(defaultPaidFromFundForCategory(isMealCategory: false), isFalse);
+    });
   });
 }

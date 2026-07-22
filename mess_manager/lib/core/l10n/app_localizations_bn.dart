@@ -538,6 +538,20 @@ class AppLocalizationsBn extends AppLocalizations {
   String get expensesPaidBy => 'যিনি দিয়েছেন';
 
   @override
+  String get expensesPaidFromFund => 'মেসের ফান্ড';
+
+  @override
+  String get expensesPaidByMember => 'একজন সদস্য দিয়েছেন';
+
+  @override
+  String get expensesPaidFromFundHint =>
+      'সবার জমা করা টাকা থেকে খরচ। কাউকে ফেরত দিতে হবে না — যার যত মিল, তার তত টাকা কাটা যাবে।';
+
+  @override
+  String get expensesPaidByMemberHint =>
+      'কেউ নিজের পকেট থেকে দিয়েছেন, তাই মেস তাকে এই টাকা ফেরত দেবে।';
+
+  @override
   String get expensesAddPayer => 'আরেকজন যোগ করুন';
 
   @override
